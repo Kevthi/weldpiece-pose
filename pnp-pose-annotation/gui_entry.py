@@ -3,6 +3,7 @@ from gui_init_pose import InitPoseGUI
 from gui_file_select import FileSelectGUI
 from gui_pnp import PnPGUI
 from gui_components import ColBoxLayout
+from gui_components import color_profile as cp
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -20,23 +21,34 @@ GRAY_TEXT_COLOR = [.85,.85,.85]
 
 class Topbar(ColBoxLayout):
     def __init__(self, tab_dict, active_tab=None):
-        super().__init__(DARKEST, orientation='horizontal', size_hint=(1.0, None), height=50) 
+        super().__init__(cp.TOPBAR, orientation='horizontal', size_hint=(1.0, None), height=45) 
         for tab_name in tab_dict:
             if tab_name == active_tab:
-                color = SB_COL_BTN
+                bg_color = cp.TOPBAR_BTN_ACTIVE
+                text_color=cp.BLACK_TEXT
             else:
-                color = DARKEST_BTN
+                bg_color = cp.TOPBAR_BTN_INACTIVE
+                text_color=cp.WHITE_TEXT
             cb_func = tab_dict[tab_name]["callback"]
-            tab_btn = Button(text=tab_name, size_hint=(None, 1.0), width=300, background_color=color, font_size=20, color=GRAY_TEXT_COLOR)
+            tab_btn = Button(text=tab_name, background_normal='',size_hint=(None, 1.0), width=300, background_color=bg_color, font_size=20, color=text_color)
             tab_btn.bind(on_press=cb_func)
             self.add_widget(tab_btn)
+            self.add_widget(ColBoxLayout(cp.TOPBAR_BREAK,size_hint=(None,1.0), width=2))
 
 
 
 class BelowTopbar(ColBoxLayout):
     def __init__(self):
-        super().__init__(SB_COL, orientation='horizontal', size_hint=(1.0, None), height=60) 
+        super().__init__(cp.SIDEBAR, orientation='horizontal', size_hint=(1.0, None), height=60) 
 
+
+def init_state_dict():
+    state_dict = {
+        "functions":{},
+        "image_dir":None,
+        "3dmodel_dir":None
+    }
+    return state_dict
 
 
 
@@ -46,6 +58,12 @@ class GUIMain(App):
         self.FILE_TABNAME = "Select Files"
         self.INIT_POSE_TABNAME = "Initialize pose"
         self.PNP_TABNAME = "Solve PnP"
+
+        self.state_dict = init_state_dict()
+        self.state_dict["functions"]["set_fs_tab"] = self.set_file_select_active
+        self.state_dict["functions"]["set_ip_tab"] = self.set_pose_init_active
+        self.state_dict["functions"]["set_pnp_tab"] = self.set_pnp_active
+
 
 
         self.tab_dict = {
@@ -62,6 +80,8 @@ class GUIMain(App):
                 "is_accessible":True,
             }
         }
+
+
         self.gui_window = BoxLayout(orientation='vertical')
         self.set_file_select_active()
         return self.gui_window
@@ -77,7 +97,7 @@ class GUIMain(App):
         return main_win
 
     def set_file_select_active(self, btn_obj=None):
-        file_select = FileSelectGUI()
+        file_select = FileSelectGUI(self.state_dict)
         main_win = self.rerender_mainwin(self.tab_dict, self.FILE_TABNAME)
         main_win.add_widget(file_select)
 

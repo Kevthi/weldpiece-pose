@@ -47,11 +47,11 @@ class PnPGUI(BoxLayout):
         #anchor.add_widget(img)
         img = np.random.randint(0, 30, size=(1001, 1001, 3), dtype=np.uint8)
         cv2.circle(img, (img.shape[1]//2, img.shape[0]//2), 3, 255, -1)
-        self.image1 = DragZoomImage(img, padding=0)
-        self.image1.bind(self.img_callback)
+        self.image1 = DragZoomImage(img, [1.0,1.0,1.0], padding=0)
+        self.image1.bind_image_cb(self.img_callback)
         self.add_widget(self.image1)
 
-        self.add_widget(DragZoomImage(img, padding=10))
+        self.add_widget(DragZoomImage(img, padding=10, background_color=[1.0,1.0,1.0]))
 
     def img_callback(self, pos):
         print("print pos from cb", pos)

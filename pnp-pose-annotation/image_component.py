@@ -9,6 +9,7 @@ from kivy.uix.widget import Widget
 
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
+from kivy.graphics import Color, Rectangle
 
 import asyncio
 from threading import Thread
@@ -131,10 +132,9 @@ class DragZoomImageHandler(Image):
         self.texture = self.orig_texture.get_region(int(new_x),int(new_y), int(new_width), int(new_height))
 
     def init_drag(self):
-        print("def drag")
         Window.bind(mouse_pos=self.drag)
         while self.IS_DRAGGED:
-            time.sleep(0.1)
+            time.sleep(0.05)
             #print(self.get_cursor_pixel_pos())
         Window.unbind(mouse_pos=self.drag)
     
@@ -146,20 +146,15 @@ class DragZoomImageHandler(Image):
         pos_diff = last_pos-pos
         pos_diff_x = min(pos_diff[0], 20)
         pos_diff_y = min(pos_diff[1], 20)
-
         zoom_pos_x = self.current_zoom_pos[0]
         zoom_pos_y = self.current_zoom_pos[1]
-
-
         new_y = max(0, zoom_pos_y+pos_diff_y)
         new_x = max(0, zoom_pos_x+pos_diff_x)
-            
         if (zoom_pos_x+pos_diff_x+self.current_zoom_size[0] > self.img_size[0]):
             print(zoom_pos_x+pos_diff_x+self.current_zoom_size[0])
             new_x = zoom_pos_x
         if (zoom_pos_y+pos_diff_y+self.current_zoom_size[1] > self.img_size[1]):
             new_y = zoom_pos_y
-
         self.current_zoom_pos = np.array([new_x, new_y])
         self.texture = self.orig_texture.get_region(int(new_x),int(new_y), self.current_zoom_size[0], self.current_zoom_size[1])
 
@@ -169,6 +164,8 @@ class DragZoomImageHandler(Image):
 
 
     def on_touch_up(self, touch):
+        if self.touch_down_pos is None:
+            return
         self.IS_DRAGGED = False
         if self.collide_point(*touch.pos) and self.touch_down_equals_up_pos(touch.pos, self.touch_down_pos):
             if touch.is_mouse_scrolling:
@@ -182,7 +179,7 @@ class DragZoomImageHandler(Image):
 
     def call_callbacks(self,pos):
         pix_pos = self.get_global_cursor_pixel_pos(pos)
-        top_left_pix_pos = np.array([np.floor(self.img_size[1]-pix_pos[1]), np.floor(pix_pos[0])]).astype(np.uint32)
+        top_left_pix_pos = np.array([np.floor(self.img_size[1]-pix_pos[1]), np.floor(pix_pos[0]-0.25)]).astype(np.uint32)
         print(top_left_pix_pos)
         for cb in self.callbacks:
             cb(top_left_pix_pos)
@@ -191,7 +188,6 @@ class DragZoomImageHandler(Image):
         self.last_drag_pos = self.get_cursor_pixel_pos(touch.pos)
         self.IS_DRAGGED = True
         self.touch_down_pos = touch.pos
-
         if self.collide_point(*touch.pos):
             thread = Thread(target=self.init_drag)
             thread.start()
@@ -218,16 +214,35 @@ class DragZoomImageHandler(Image):
 
 
 class DragZoomImage(AnchorLayout):
-    def __init__(self, rgb_img=None, **kwargs):
+    def __init__(self, rgb_img=None,background_color=[0,0,0], **kwargs):
         super().__init__(anchor_x='center',  anchor_y='center', **kwargs)
         if rgb_img is None:
             rgb_img = np.zeros((512,512,3), dtype=np.uint8)
+        rgb_img = cv2.flip(rgb_img, 0)
         self.image_handler = DragZoomImageHandler(rgb_img)
         self.add_widget(self.image_handler)
 
-    def bind(self, callback):
+        self.bind(
+            size=self._update_rect,
+            pos=self._update_rect
+        )
+
+        with self.canvas.before:
+            Color(background_color[0], background_color[1], background_color[2], 1)
+            self.rect = Rectangle(
+                size=self.size,
+                pos=self.pos
+            )
+
+    def _update_rect(self, instance, value):
+        self.rect.pos = instance.pos
+        self.rect.size = instance.size
+
+
+    def bind_image_cb(self, callback):
         self.image_handler.bind(callback)
 
     def set_texture(self, rgb_img):
+        rgb_img = cv2.flip(rgb_img, 0)
         self.image_handler.set_texture(rgb_img)
 
