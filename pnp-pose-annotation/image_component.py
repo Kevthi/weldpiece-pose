@@ -196,13 +196,13 @@ class DragZoomImageHandler(Image):
     def set_texture(self, rgb_img):
         data = rgb_img.tobytes()
         # texture
-        texture = Texture.create(size=(rgb_img.shape[0], rgb_img.shape[1]), colorfmt="rgb")
+        texture = Texture.create(size=(rgb_img.shape[1], rgb_img.shape[1]), colorfmt="rgb")
         texture.blit_buffer(data, bufferfmt="ubyte", colorfmt="rgb")
         texture.mag_filter = 'nearest'
         texture.min_filter = 'nearest'
         self.texture = texture
         self.orig_texture = texture
-        if(rgb_img.shape[0] == self.img_size[0] and rgb_img.shape[1] == self.img_size[1]):
+        if(rgb_img.shape[1] == self.img_size[0] and rgb_img.shape[0] == self.img_size[1]):
             self.texture = self.orig_texture.get_region(int(self.current_zoom_pos[0]), int(self.current_zoom_pos[1]), int(self.current_zoom_size[0]), int(self.current_zoom_size[1]))
         else:
             self.img_size = self.texture.size

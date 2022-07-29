@@ -45,8 +45,14 @@ class BelowTopbar(ColBoxLayout):
 def init_state_dict():
     state_dict = {
         "functions":{},
-        "image_dir":None,
-        "3dmodel_dir":None
+        "paths":{
+            "image_dir":None,
+            "3dmodel_dir":None,
+            "selected_img":None,
+            "selected_model":None,
+            "camera_info_path":None,
+        },
+        "camera_matrix":None,
     }
     return state_dict
 
