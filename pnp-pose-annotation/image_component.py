@@ -144,8 +144,8 @@ class DragZoomImageHandler(Image):
         last_pos = np.array(self.last_drag_pos)
         self.last_drag_pos = pos
         pos_diff = last_pos-pos
-        pos_diff_x = min(pos_diff[0], 20)
-        pos_diff_y = min(pos_diff[1], 20)
+        pos_diff_x = min(pos_diff[0], 100)
+        pos_diff_y = min(pos_diff[1], 100)
         zoom_pos_x = self.current_zoom_pos[0]
         zoom_pos_y = self.current_zoom_pos[1]
         new_y = max(0, zoom_pos_y+pos_diff_y)

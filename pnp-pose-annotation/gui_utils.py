@@ -35,6 +35,17 @@ def read_json_to_dict(json_path):
         py_dict = json.load(json_file)
     return py_dict
 
+def get_camera_matrix_json(json_path, image_path):
+    image_name = os.path.basename(image_path)
+    json_dict = read_json_to_dict(json_path)
+    if image_name in json_dict:
+        return convert_cam_mat_format(json_dict[image_name]["K"])
+    elif "default" in json_dict:
+        return convert_cam_mat_format(json_dict["default"])
+    else:
+        return None
+
+
 def is_valid_cam_info_dict(cam_info_dict):
     for key in cam_info_dict:
         if (key == "default") and (cam_info_dict["default"] is None):
@@ -115,9 +126,10 @@ def init_camera_info_dict(default=None):
     return camera_info
 
 def convert_cam_mat_format(K_multiformat):
+    print("K multi", K_multiformat)
     K_format = type(K_multiformat)
     K_np = np.array(K_multiformat)
-    K_np = K_np.reshape(K_np, (3,3))
+    K_np = np.reshape(K_np, (3,3))
     return K_np
 
 

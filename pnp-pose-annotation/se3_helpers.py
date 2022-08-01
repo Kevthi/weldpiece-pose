@@ -1,6 +1,9 @@
 import spatialmath as sm
 import numpy as np
 
+def invert_T(T):
+    T_sm = sm.SE3(T)
+    return T_sm.inv().data[0]
 
 def look_at_SE3(origin, target, up):
     """
@@ -91,10 +94,11 @@ def get_T_CO_init_and_gt(scene_config):
 
 
 if __name__ == '__main__':
-    config = get_config()
-    T_CO_init, T_CO_gt = get_T_CO_init_and_gt(config)
-    print(T_CO_init)
-    print(T_CO_gt)
+    T = sm.SE3.Rx(40)
+    T_inv = invert_T(T.data[0])
+    print(T)
+    print(T_inv)
+    print(T.inv())
 
 
 

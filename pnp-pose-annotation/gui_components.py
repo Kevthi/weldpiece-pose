@@ -90,6 +90,12 @@ class TextureImage(Image):
         self.texture = Texture.create(size=(rgb_img.shape[1], rgb_img.shape[0]), colorfmt='rgb')
         self.texture.blit_buffer(buf, bufferfmt='ubyte', colorfmt='rgb')
 
+    def update_texture(self, rgb_img):
+        rgb_img_flip = cv2.flip(rgb_img,0)
+        buf = rgb_img_flip.tobytes()
+        self.texture.blit_buffer(buf, bufferfmt='ubyte', colorfmt='rgb')
+
+
 
 
         

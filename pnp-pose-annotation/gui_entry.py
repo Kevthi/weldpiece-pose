@@ -44,7 +44,14 @@ class BelowTopbar(ColBoxLayout):
 
 def init_state_dict():
     state_dict = {
-        "functions":{},
+        "functions":{
+            "set_fs_tab":None,
+            "set_ip_tab":None,
+            "set_pnp_tab":None,
+            "rerender":None,
+            "on_add_corr":None,
+            "draw_corrs":None,
+        },
         "paths":{
             "image_dir":None,
             "3dmodel_dir":None,
@@ -52,7 +59,21 @@ def init_state_dict():
             "selected_model":None,
             "camera_info_path":None,
         },
-        "camera_matrix":None,
+        "scene":{
+            "cam_K":None,
+            "T_wc":None,
+            "orig_img_size":None,
+        },
+        "pnp":{
+            "corresps":[],
+            "img_select":None,
+            "rend_select":None,
+            "normal_render":False,
+            "cam_img":None,
+            "rend_img":None,
+            "rend_depth":None,
+            "marker_size":5,
+        },
     }
     return state_dict
 
@@ -69,6 +90,12 @@ class GUIMain(App):
         self.state_dict["functions"]["set_fs_tab"] = self.set_file_select_active
         self.state_dict["functions"]["set_ip_tab"] = self.set_pose_init_active
         self.state_dict["functions"]["set_pnp_tab"] = self.set_pnp_active
+
+        # temp for testing
+        self.state_dict["paths"]["selected_img"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner/captures/corner1-undist.png"
+        self.state_dict["paths"]["selected_model"] = "/home/ola/projects/weldpiece-pose-datasets/pnp-pose-annotation/corner.ply"
+        self.state_dict["paths"]["camera_info_path"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner/captures/info.json"
+
 
 
 
@@ -109,12 +136,12 @@ class GUIMain(App):
 
 
     def set_pose_init_active(self, btn_obj=None):
-        pose_init = InitPoseGUI()
+        pose_init = InitPoseGUI(self.state_dict)
         main_win = self.rerender_mainwin(self.tab_dict, self.INIT_POSE_TABNAME)
         main_win.add_widget(pose_init)
 
     def set_pnp_active(self, btn_obj=None):
-        pnp_gui = PnPGUI()
+        pnp_gui = PnPGUI(self.state_dict)
         main_win = self.rerender_mainwin(self.tab_dict, self.PNP_TABNAME)
         main_win.add_widget(pnp_gui)
 

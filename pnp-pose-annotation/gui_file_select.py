@@ -3,7 +3,7 @@ from renderer import render_thumbnail
 
 from gui_components import Sidebar, SidebarButton, ColBoxLayout, ColGridLayout, ColAnchorLayout, ColScrollView
 from gui_components import TextureImage
-from gui_utils import ask_directory, ask_file, get_image_paths_from_dir, read_rgb, get_files_from_dir
+from gui_utils import ask_directory, ask_file, get_image_paths_from_dir, read_rgb, get_files_from_dir, get_camera_matrix_json
 from gui_components import color_profile as cp
 
 from kivy.uix.boxlayout import BoxLayout
@@ -20,8 +20,10 @@ from kivy.uix.label import Label
 
 
 class FileSelectCard(ColBoxLayout):
-    def __init__(self, rgb_img, path):
+    def __init__(self, rgb_img, path, state_dict, set_path_cb):
         super().__init__(cp.CARD_BG, orientation='vertical', height=400, size_hint=(0.3,None), size_hint_max_x=400, padding=10)
+        self.state_dict = state_dict
+        self.set_path_cb = set_path_cb
         #img = Image(source=img_path, size_hint=(1.0,1.0), allow_stretch=True, keep_ratio=True)
         self.path = path
         img = TextureImage(rgb_img)
@@ -34,9 +36,10 @@ class FileSelectCard(ColBoxLayout):
         btn.bind(on_press=self.on_select)
 
     def on_select(self, instance):
-        print("Selected")
         self.parent.reset_card_colors()
         self.update_color(cp.FS_SELECTED_CARD)
+        self.set_path_cb(self.path)
+        self.state_dict["functions"]["on_files_selected"]()
 
 class CardGrid(ColGridLayout):
     def __init__(self):
@@ -65,14 +68,18 @@ class FileSelectSidebar(Sidebar):
 
 
 class ImgSelectScroll(ColScrollView):
-    def __init__(self, img_paths):
+    def __init__(self, img_paths, state_dict):
         super().__init__(cp.FILESELECT_BG,do_scroll_y=True, bar_width=20, bar_color=cp.SCROLLBAR, bar_inactive_color=cp.SCROLLBAR)
         self.card_grid = CardGrid()
+        self.state_dict = state_dict
         for img_path in img_paths:
             rgb_img = read_rgb(img_path)
-            fs_card = FileSelectCard(rgb_img, img_path)
+            fs_card = FileSelectCard(rgb_img, img_path, state_dict, self.set_img_path_cb)
             self.card_grid.add_card_widget(fs_card)
         self.add_widget(self.card_grid)
+
+    def set_img_path_cb(self, path):
+        self.state_dict["paths"]["selected_img"] = path
 
 class SelectDirectory(ColAnchorLayout):
     def __init__(self, text, callback):
@@ -88,33 +95,40 @@ class SelectDirectory(ColAnchorLayout):
         self.callback(img_dir)
 
 
-class CameraInfoSelectBox(AnchorLayout):
-    def __init__(self, state_dict, camera_info_path):
-        super().__init__(anchor_x='center', anchor_y='center', size_hint=(1.0,None), height=50)
-        self.camera_info_path = camera_info_path
-        self.state_dict = state_dict
-        self.btn = Button(text=camera_info_path, size_hint=(0.5,1.0))
-        self.add_widget(self.btn)
-
-    def on_select_path(self, instance):
-        self.parent.parent.remove_camera_info_select()
-
 
 
 class CameraInfoSelectFile(AnchorLayout):
     def __init__(self, state_dict):
         super().__init__(anchor_x='center', anchor_y='center', size_hint=(1.0,1.0))
         self.state_dict = state_dict
-        self.select_file_btn = Button(text="Select camera info file (JSON/NPY)", background_color=cp.DIR_SELECT_BTN, width=450, height=150, size_hint=(None,None), font_size=20)
-        self.select_file_btn.bind(on_press=self.on_select_path)
-        self.add_widget(self.select_file_btn)
+        self.select_file_btn_large = Button(text="Select camera info file (JSON/NPY)", background_color=cp.DIR_SELECT_BTN, width=450, height=150, size_hint=(None,None), font_size=20)
+        if(self.state_dict["paths"]["camera_info_path"] is None):
+            self.select_file_btn_large.bind(on_press=self.on_select_path_large_btn)
+            self.add_widget(self.select_file_btn_large)
+        else:
+            self.show_path()
 
 
-    def on_select_path(self, instance):
+    def on_select_path_large_btn(self, instance):
         camera_info_path = ask_file()
         self.state_dict["paths"]["camera_info_path"] = camera_info_path
         self.state_dict["functions"]["on_files_selected"]()
-        self.parent.parent.remove_camera_info_select()
+        self.clear_widgets()
+        #self.parent.parent.remove_camera_info_select()
+        self.show_path()
+
+    def show_path(self):
+        path = self.state_dict["paths"]["camera_info_path"]
+        show_path_btn = Button(text=path, color=cp.BLACK_TEXT, size_hint=(0.6,0.3), background_color=cp.SIDEBAR_BTN)
+        self.add_widget(show_path_btn)
+        show_path_btn.bind(on_press=self.on_select_path_large_btn)
+
+
+
+
+
+
+
 
 
 
@@ -135,14 +149,13 @@ class ImgSelectMainWin(BoxLayout):
     def __init__(self, state_dict):
         super().__init__(orientation='vertical')
         self.state_dict = state_dict
+        self.camera_info_select = CameraInfoSelectBoxMain(state_dict)
+        self.add_widget(self.camera_info_select)
         if state_dict["paths"]["image_dir"] is None:
             self.add_widget(SelectDirectory("Select image directory", self.image_dir_select_cb))
         else:
             img_paths = get_image_paths_from_dir(state_dict["paths"]["image_dir"])
-            scroll_view = ImgSelectScroll(img_paths)
-            if state_dict["paths"]["camera_info_path"] is None:
-                self.camera_info_select = CameraInfoSelectBoxMain(state_dict)
-                self.add_widget(self.camera_info_select)
+            scroll_view = ImgSelectScroll(img_paths, state_dict)
 
             self.add_widget(scroll_view)
 
@@ -181,20 +194,24 @@ class ModelSelectMainWin(BoxLayout):
 
     def add_scroll_view(self, model_dir):
         model_paths = get_files_from_dir(model_dir, "ply")
-        scroll_view = ModelSelectScroll(model_paths)
+        scroll_view = ModelSelectScroll(model_paths, self.state_dict)
         self.add_widget(scroll_view)
 
 
 
 class ModelSelectScroll(ColScrollView):
-    def __init__(self, model_paths):
+    def __init__(self, model_paths, state_dict):
         super().__init__(cp.FILESELECT_BG,do_scroll_y=True, bar_width=20, bar_color=cp.SCROLLBAR, bar_inactive_color=cp.SCROLLBAR)
         self.card_grid = CardGrid()
+        self.state_dict = state_dict
         for model_path in model_paths:
             rgb_img = render_thumbnail(model_path)
-            fs_card = FileSelectCard(rgb_img, model_path)
+            fs_card = FileSelectCard(rgb_img, model_path, state_dict, self.select_path_cb)
             self.card_grid.add_card_widget(fs_card)
         self.add_widget(self.card_grid)
+
+    def select_path_cb(self, path):
+        self.state_dict["paths"]["selected_model"] = path
 
 
 
@@ -206,7 +223,7 @@ class FileSelectGUI(BoxLayout):
         super().__init__(orientation='horizontal')
         self.state_dict = state_dict
         self.state_dict["functions"]["on_files_selected"] = self.on_files_selected
-        self.add_widget(FileSelectSidebar())
+        #self.add_widget(FileSelectSidebar())
         self.vert_layout = BoxLayout(orientation='vertical')
         self.horiz_layout = BoxLayout(orientation='horizontal', size_hint=(1.0,0.8))
         self.vert_layout.add_widget(self.horiz_layout)
@@ -216,14 +233,37 @@ class FileSelectGUI(BoxLayout):
         self.horiz_layout.add_widget(ImgSelectMainWin(state_dict))
         self.horiz_layout.add_widget(ColBoxLayout(cp.FS_DELIMITER, size_hint=(None,1.0), width=20))
         self.horiz_layout.add_widget(ModelSelectMainWin(state_dict))
+        self.go_to_next_added = False
+        self.on_files_selected()
 
     def on_files_selected(self):
         print("on files selected")
         img_selected = (self.state_dict["paths"]["selected_img"] is not None)
         model_selected = self.state_dict["paths"]["selected_model"] is not None
         camera_info_selected = self.state_dict["paths"]["camera_info_path"] is not None
+        print("Img selected", self.state_dict["paths"]["selected_img"])
+        print("Model selected", self.state_dict["paths"]["selected_model"])
+        print("Camera info selected", self.state_dict["paths"]["camera_info_path"])
         if (img_selected and model_selected and camera_info_selected):
             print("All selected")
+            self.on_all_selected()
+
+    def on_all_selected(self):
+        img_path = self.state_dict["paths"]["selected_img"]
+        cam_info_path = self.state_dict["paths"]["camera_info_path"]
+        print("on all selected")
+        cam_mat = get_camera_matrix_json(cam_info_path, img_path)
+        self.state_dict["scene"]["cam_K"] = cam_mat
+        img_shape = read_rgb(img_path).shape[:2]
+        orig_img_size = [img_shape[1], img_shape[0]]
+        self.state_dict["scene"]["orig_img_size"] = orig_img_size
+        print(cam_mat)
+        if not self.go_to_next_added:
+            go_to_init_pose_btn = Button(text="Go to initialize pose", color=cp.WHITE_TEXT, background_color=cp.DIR_SELECT_BTN, size_hint=(1.0, 0.1))
+            self.vert_layout.add_widget(go_to_init_pose_btn)
+            self.go_to_next_added = True
+            go_to_init_pose_btn.bind(on_press=self.state_dict["functions"]["set_ip_tab"])
+
 
 
 
