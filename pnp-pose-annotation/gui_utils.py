@@ -4,6 +4,8 @@ import tkinter as tk
 from tkinter import filedialog
 import json
 import cv2
+import matplotlib.pyplot as plt
+import colorsys
 
 
 def read_rgb(img_path):
@@ -133,11 +135,76 @@ def convert_cam_mat_format(K_multiformat):
     return K_np
 
 
+def draw_marker(img, coord, color, marker_size):
+    img = img.copy()
+    x_first = (coord[1], coord[0])
+    cv2.drawMarker(img, x_first, color, markerType=cv2.MARKER_CROSS, thickness=marker_size, markerSize=marker_size*8)
+    return img
+
+def get_hue_color(hue):
+    rgb_col = list(np.array(colorsys.hsv_to_rgb(hue, 1.0,1.0)))
+    rgb_col = tuple([int(val*255) for val in rgb_col])
+    return rgb_col
+
+def get_color_list(length):
+    hue = 0
+    hue_incr = 1.0/7.0
+    color_list = []
+    for i in range(length):
+        rgb = get_hue_color(hue)
+        color_list.append(rgb)
+        hue+=hue_incr
+    return color_list
+
+
+def draw_corresps(img, corr_list, additional=None, marker_size=5):
+    img = img.copy()
+    col_list = get_color_list(len(corr_list)+1)
+    idx = 0
+    for corr in corr_list:
+        rgb_col = col_list[idx]
+        img = draw_marker(img, corr, rgb_col, marker_size)
+        idx +=1
+    if additional is not None:
+        rgb_col = col_list[idx]
+        img = draw_marker(img, additional, rgb_col, marker_size)
+    return img
+
+def draw_corresps_both(cam_img, rend_img, both_corresps, img_select, rend_select, marker_size=5):
+    img_corrs, rend_corrs = split_corresps(both_corresps)
+    c_width = cam_img.shape[0]
+    r_width = rend_img.shape[0]
+    if c_width>r_width:
+        cam_marker_size = int(c_width*1.0/r_width*marker_size)
+        rend_marker_size = int(marker_size)
+    else:
+        rend_marker_size = int(r_width*1.0/c_width*marker_size)
+        cam_marker_size = int(marker_size)
+
+    cam_img = draw_corresps(cam_img, img_corrs, img_select, cam_marker_size)
+    rend_img = draw_corresps(rend_img, rend_corrs, rend_select, rend_marker_size)
+    return cam_img, rend_img
+
+def split_corresps(both_corresps):
+    img_corrs = [img_corr for img_corr,_ in both_corresps]
+    rend_corrs = [rend_corr for _, rend_corr in both_corresps]
+    return img_corrs, rend_corrs
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
-    K = np.identity(3)
-    search_dir = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner/captures"
-
-    print("is valid", search_dir_camera_info(search_dir))
+    img1 = read_rgb("corner1-undist.png")
+    rgb_col = get_hue_color(0.33)
+    print(rgb_col)
+    img = draw_marker(img1, (500,500), rgb_col, 3)
+    plt.imshow(img)
+    plt.show()
+    plt.imshow(img1)
+    plt.show()
 

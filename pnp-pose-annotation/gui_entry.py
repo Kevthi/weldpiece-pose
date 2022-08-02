@@ -51,6 +51,8 @@ def init_state_dict():
             "rerender":None,
             "on_add_corr":None,
             "draw_corrs":None,
+            "update_sidebar_corrs":None,
+            "update_pnp":None,
         },
         "paths":{
             "image_dir":None,
@@ -72,7 +74,8 @@ def init_state_dict():
             "cam_img":None,
             "rend_img":None,
             "rend_depth":None,
-            "marker_size":5,
+            "rend_K":None,
+            "marker_size":3,
         },
     }
     return state_dict

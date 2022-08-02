@@ -1,15 +1,20 @@
-from gui_components import Sidebar, SidebarButton, ColBoxLayout, ColAnchorLayout
-from gui_utils import ask_directory, ask_file, read_rgb
+from gui_components import Sidebar, SidebarButton, ColBoxLayout, ColAnchorLayout, SidebarHeader 
+from gui_utils import ask_directory, ask_file, read_rgb, draw_corresps_both, get_color_list, split_corresps
 from gui_components import color_profile as cp
 from renderer import render_scene
 from render_utils import convert_cam_mat
 import matplotlib.pyplot as plt
+from pnp_handler import project_to_3d
 
 
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.core.window import Window
+from kivy.uix.slider import Slider
+from kivy.uix.label import Label
+from kivy.uix.scrollview import  ScrollView
+from kivy.uix.gridlayout import GridLayout
 
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
@@ -37,9 +42,93 @@ class PnPSidebar(Sidebar):
     def __init__(self, state_dict):
         super().__init__()
         self.state_dict = state_dict
-        self.add_widget(SidebarButton(text="Add corr", height=50))
-        self.add_widget(SidebarButton(height=50))
+        self.slider = None
+        self.slider_label = None
+        self.add_slidebar()
+        self.corr_display = AllCorrDisplay(state_dict)
+        self.add_widget(self.corr_display)
         self.add_widget(Widget())
+
+
+    def add_slidebar(self):
+        box_layout = BoxLayout(size_hint=(1.0,None), height=30)
+        cur_mark_sz = self.state_dict["pnp"]["marker_size"]
+        self.slider = Slider(min=1,max=12, value=cur_mark_sz, value_track_color=cp.PNP_SLIDER_BG, value_track_width=10, size_hint=(0.6,1.0))
+        self.slider_label = Label(text=str(self.slider.value), size_hint=(0.2,1.0), color=cp.BLACK_TEXT)
+        box_layout.add_widget(Label(text="Marker size", size_hint=(0.2,1.0), color=cp.BLACK_TEXT))
+        box_layout.add_widget(self.slider)
+        box_layout.add_widget(self.slider_label)
+        self.add_widget(box_layout)
+        self.slider.bind(value=self.update_label)
+
+    def update_label(self, instance, value):
+        value = int(instance.value)
+        self.slider_label.text = str(value)
+        self.state_dict["pnp"]["marker_size"] = value
+        self.state_dict["functions"]["draw_corrs"]()
+
+
+class SingleCorrDisplay(BoxLayout):
+    def __init__(self, state_dict, color, idx, corr_tup):
+        super().__init__(orientation='horizontal', size_hint=(1.0, None), height=46, padding=[20,2,20,2])
+        self.state_dict = state_dict
+        self.idx = idx
+        self.corr_tup = corr_tup
+        self.anchor_label = AnchorLayout(size_hint=(0.7,None), height=30, anchor_x='center', anchor_y='center')
+
+        self.inner_box = ColBoxLayout(cp.PNP_SIDEBAR_CORR, size_hint=(0.9, None), height=30)
+
+        label_text = str(corr_tup[0]) + "  " +str(corr_tup[1])
+        self.label = SidebarHeader(text=label_text, font_size=16)
+        self.anchor_label.add_widget(self.label)
+
+        remove_btn = Button(text='X', size_hint=(None,None), width=30, height=30)
+        remove_btn.bind(on_press=self.on_remove)
+
+
+        self.inner_box.add_widget(ColBoxLayout(color, size_hint=(None,None), height=30, width=30))
+        self.inner_box.add_widget(self.anchor_label)
+        self.inner_box.add_widget(remove_btn)
+        self.add_widget(self.inner_box)
+
+    def on_remove(self, instance):
+        self.state_dict["pnp"]["corresps"].pop(self.idx)
+        self.state_dict["functions"]["draw_corrs"]()
+
+
+
+class AllCorrDisplay(BoxLayout):
+    def __init__(self, state_dict):
+        super().__init__(orientation='vertical', size_hint=(1.0,None), height=500, padding=[0,5,0,0])
+        header = SidebarHeader(text="Correspondonces", font_size=20)
+        self.add_widget(header)
+
+        self.inner_box = ColBoxLayout(cp.PNP_CORR_WIN_BG, orientation='vertical')
+        self.add_widget(self.inner_box)
+
+        self.scroll_view = ScrollView(do_scroll_y=True, bar_width=20)
+        self.inner_box.add_widget(self.scroll_view)
+        self.state_dict = state_dict
+        self.state_dict["functions"]["update_sidebar_corrs"] = self.update_sidebar_corrs
+        self.grid = GridLayout(cols=1, size_hint_y=None)
+        self.grid.bind(minimum_height=self.grid.setter('height'))
+        self.scroll_view.add_widget(self.grid)
+        self.update_sidebar_corrs()
+
+    def update_sidebar_corrs(self):
+        self.grid.clear_widgets()
+        corresps = self.state_dict["pnp"]["corresps"]
+        color_list = get_color_list(len(corresps))
+        for idx,color in enumerate(color_list):
+            self.grid.add_widget(SingleCorrDisplay(self.state_dict, (color[0]/255,color[1]/255, color[2]/255), idx, corresps[idx]))
+            #self.add_widget(Widget())
+
+
+
+
+
+
+
 
 class CameraImageDisplay(ColBoxLayout):
     def __init__(self, state_dict):
@@ -58,6 +147,9 @@ class CameraImageDisplay(ColBoxLayout):
         self.state_dict["pnp"]["img_select"] = pixel_coord
         self.state_dict["functions"]["on_add_corr"]()
 
+    def set_texture(self, rgb_img):
+        self.image_handler.set_texture(rgb_img)
+
 class ModelImageDisplay(ColBoxLayout):
     def __init__(self, state_dict):
         super().__init__(cp.FILESELECT_BG, orientation='vertical', size_hint=(0.33,1.0))
@@ -73,6 +165,9 @@ class ModelImageDisplay(ColBoxLayout):
         
 
         rgb_img, depth = render_scene(model_path, np.linalg.inv(T_WC), K_new, img_size)
+        self.state_dict["pnp"]["rend_img"] = rgb_img
+        self.state_dict["pnp"]["rend_depth"] = depth
+        self.state_dict["pnp"]["rend_K"] = K_new
         self.image_handler = DragZoomImage(rgb_img, cp.FILESELECT_BG)
         self.add_widget(self.image_handler)
         self.image_handler.bind_image_cb(self.on_click)
@@ -95,17 +190,13 @@ class ModelImageDisplay(ColBoxLayout):
         self.state_dict["pnp"]["rend_select"] = pixel_coord
         self.state_dict["functions"]["on_add_corr"]()
 
+    def set_texture(self, rgb_img):
+        self.image_handler.set_texture(rgb_img)
+
+
         
 
 
-class OverlapImageDisplay(ColBoxLayout):
-    def __init__(self, state_dict):
-        super().__init__(cp.FILESELECT_BG, orientation='vertical', size_hint=(0.33,1.0))
-        self.state_dict = state_dict
-        img_path = state_dict["paths"]["selected_img"]
-        self.rgb_img = read_rgb(img_path)
-        self.image_handler = DragZoomImage(self.rgb_img, cp.FILESELECT_BG)
-        self.add_widget(self.image_handler)
 
 class ImageMainWin(ColBoxLayout):
     def __init__(self, state_dict):
@@ -113,14 +204,15 @@ class ImageMainWin(ColBoxLayout):
         self.state_dict = state_dict
         self.state_dict["functions"]["on_add_corr"] = self.on_add_corr
         self.state_dict["functions"]["draw_corrs"] = self.draw_corrs
-        cam_img_disp = CameraImageDisplay(state_dict)
-        self.add_widget(cam_img_disp)
+        self.cam_img_disp = CameraImageDisplay(state_dict)
+        self.add_widget(self.cam_img_disp)
         self.add_widget(ColBoxLayout(cp.FS_DELIMITER, size_hint=(None,1.0), width=20))
-        model_img_disp = ModelImageDisplay(state_dict)
-        self.add_widget(model_img_disp)
+        self.model_img_disp = ModelImageDisplay(state_dict)
+        self.add_widget(self.model_img_disp)
         self.add_widget(ColBoxLayout(cp.FS_DELIMITER, size_hint=(None,1.0), width=20))
         overlap_img_display = OverlapImageDisplay(state_dict)
         self.add_widget(overlap_img_display)
+        self.draw_corrs()
 
     def on_add_corr(self):
         print("on add corr")
@@ -134,7 +226,42 @@ class ImageMainWin(ColBoxLayout):
         self.draw_corrs()
 
     def draw_corrs(self):
-        print("draw corrs")
+
+        cam_img = self.state_dict["pnp"]["cam_img"]
+        rend_img = self.state_dict["pnp"]["rend_img"]
+        img_select = self.state_dict["pnp"]["img_select"]
+        rend_select = self.state_dict["pnp"]["rend_select"]
+        corresps = self.state_dict["pnp"]["corresps"]
+        marker_size = self.state_dict["pnp"]["marker_size"]
+        cam_img_mark, rend_img_mark = draw_corresps_both(cam_img, rend_img, corresps, img_select, rend_select, marker_size)
+        self.cam_img_disp.set_texture(cam_img_mark)
+        self.model_img_disp.set_texture(rend_img_mark)
+        self.state_dict["functions"]["update_sidebar_corrs"]()
+        self.state_dict["functions"]["update_pnp"]()
+
+        
+
+class OverlapImageDisplay(ColBoxLayout):
+    def __init__(self, state_dict):
+        super().__init__(cp.FILESELECT_BG, orientation='vertical', size_hint=(0.33,1.0))
+        self.state_dict = state_dict
+        self.state_dict["functions"]["update_pnp"] = self.update_pnp
+        img_path = state_dict["paths"]["selected_img"]
+        self.rgb_img = read_rgb(img_path)
+        self.image_handler = DragZoomImage(self.rgb_img, cp.FILESELECT_BG)
+        self.add_widget(self.image_handler)
+
+    def update_pnp(self):
+        corresps = self.state_dict["pnp"]["corresps"]
+        num_corrs = len(corresps)
+        print("update pnp num corrs", num_corrs)
+        if num_corrs < 5:
+            return
+
+        rend_K = self.state_dict["pnp"]["rend_K"]
+        rend_depth = self.state_dict["pnp"]["rend_depth"]
+        img_corrs, rend_corrs = split_corresps(corresps)
+        corrs_3d = project_to_3d(rend_corrs, rend_depth, rend_K)
 
 
 

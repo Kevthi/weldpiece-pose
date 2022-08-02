@@ -10,6 +10,7 @@ from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
+from kivy.uix.label import Label
 
 class ColorProfile():
     def __init__(self):
@@ -47,7 +48,12 @@ class ColorProfile():
         self.FS_DELIMITER = self.SIDEBAR
         self.FS_CARD_BUTTON = np.array(NTNU_BLUE)/KIVY_DEF_BTN_COL
         self.FS_SELECTED_CARD = np.array(NTNU_BLUE_LIGHT)
+        #PNP
+        self.PNP_SLIDER_BG = NTNU_BLUE
+        self.PNP_SIDEBAR_CORR = DARKER_GRAY
+        self.PNP_CORR_WIN_BG = GRAY
         
+
 
         
 
@@ -175,6 +181,14 @@ class SidebarButton(Button):
         super().__init__(size_hint=(1.0, None), text=text, height=height, background_color=cp.SIDEBAR_BTN, color=cp.SIDEBAR_BTN_TEXT)
         if callback is not None:
             self.bind(callback)
+
+class SidebarHeader(AnchorLayout):
+    def __init__(self, text="", height=30, font_size=20, color=(0.0,0.0,0.0)):
+        super().__init__(size_hint=(1.0, None), height=height,anchor_x='center', anchor_y='center')
+        label = Label(text=text, color=color, font_size=font_size)
+        self.add_widget(label)
+
+
 
 
 
