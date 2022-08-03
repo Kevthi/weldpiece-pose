@@ -1,10 +1,10 @@
 from gui_components import Sidebar, SidebarButton, ColBoxLayout, ColAnchorLayout, SidebarHeader 
-from gui_utils import ask_directory, ask_file, read_rgb, draw_corresps_both, get_color_list, split_corresps
+from gui_utils import ask_directory, ask_file, read_rgb, draw_corresps_both, get_color_list, split_corresps, blend_imgs
 from gui_components import color_profile as cp
 from renderer import render_scene
 from render_utils import convert_cam_mat
 import matplotlib.pyplot as plt
-from pnp_handler import project_to_3d
+from pnp_handler import project_to_3d, solve_pnp_ransac, transform_points, convert_indices_to_pix_coord
 
 
 from kivy.uix.boxlayout import BoxLayout
@@ -44,26 +44,64 @@ class PnPSidebar(Sidebar):
         self.state_dict = state_dict
         self.slider = None
         self.slider_label = None
-        self.add_slidebar()
+        self.add_marker_slidebar()
+        self.add_blend_slidebar()
+        self.add_reproj_error_slidebar()
         self.corr_display = AllCorrDisplay(state_dict)
         self.add_widget(self.corr_display)
         self.add_widget(Widget())
 
 
-    def add_slidebar(self):
+    def add_marker_slidebar(self):
         box_layout = BoxLayout(size_hint=(1.0,None), height=30)
         cur_mark_sz = self.state_dict["pnp"]["marker_size"]
-        self.slider = Slider(min=1,max=12, value=cur_mark_sz, value_track_color=cp.PNP_SLIDER_BG, value_track_width=10, size_hint=(0.6,1.0))
-        self.slider_label = Label(text=str(self.slider.value), size_hint=(0.2,1.0), color=cp.BLACK_TEXT)
-        box_layout.add_widget(Label(text="Marker size", size_hint=(0.2,1.0), color=cp.BLACK_TEXT))
-        box_layout.add_widget(self.slider)
-        box_layout.add_widget(self.slider_label)
+        slider = Slider(min=1,max=12, step=1, value=cur_mark_sz, value_track_color=cp.PNP_SLIDER_BG, value_track_width=10, size_hint=(0.6,1.0))
+        self.marker_slider_label = Label(text=str(slider.value), size_hint=(0.1,1.0), color=cp.BLACK_TEXT)
+        box_layout.add_widget(Label(text="Marker size", size_hint=(0.3,1.0), color=cp.BLACK_TEXT))
+        box_layout.add_widget(slider)
+        box_layout.add_widget(self.marker_slider_label)
         self.add_widget(box_layout)
-        self.slider.bind(value=self.update_label)
+        slider.bind(value=self.update_label)
+
+    def add_blend_slidebar(self):
+        box_layout = BoxLayout(size_hint=(1.0,None), height=30)
+        blend_alpha = self.state_dict["pnp"]["blend_alpha"]
+        print("blend alpha", blend_alpha)
+        bl_slider = Slider(min=0,max=100, step=10, value=blend_alpha*100, value_track_color=cp.PNP_SLIDER_BG, value_track_width=10, size_hint=(0.6,1.0))
+        self.blend_slider_label = Label(text=str(blend_alpha), size_hint=(0.1,1.0), color=cp.BLACK_TEXT)
+        box_layout.add_widget(Label(text="Blend alpha", size_hint=(0.3,1.0), color=cp.BLACK_TEXT))
+        box_layout.add_widget(bl_slider)
+        box_layout.add_widget(self.blend_slider_label)
+        self.add_widget(box_layout)
+        bl_slider.bind(value=self.update_blend_alpha)
+
+    def add_reproj_error_slidebar(self):
+        box_layout = BoxLayout(size_hint=(1.0,None), height=30)
+        reproj_error = self.state_dict["pnp"]["reproj_error"]
+        bl_slider = Slider(min=0,max=40, step=1, value=reproj_error, value_track_color=cp.PNP_SLIDER_BG, value_track_width=10, size_hint=(0.6,1.0))
+        self.reproj_slider_label = Label(text=str(reproj_error), size_hint=(0.1,1.0), color=cp.BLACK_TEXT)
+        box_layout.add_widget(Label(text="Outlier treshold", size_hint=(0.3,1.0), color=cp.BLACK_TEXT))
+        box_layout.add_widget(bl_slider)
+        box_layout.add_widget(self.reproj_slider_label)
+        self.add_widget(box_layout)
+        bl_slider.bind(value=self.update_reproj_error)
+
+    def update_reproj_error(self, instance, value):
+        self.reproj_slider_label.text = str(value)
+        self.state_dict["pnp"]["reproj_error"] = float(value)
+        self.state_dict["functions"]["update_pnp"]()
+
+
+    def update_blend_alpha(self, instance, value):
+        print("update blend alpha")
+        print(value/100.0)
+        self.blend_slider_label.text = str(value/100.0)
+        self.state_dict["pnp"]["blend_alpha"] = value/100.0
+        self.state_dict["functions"]["show_overlap_pnp"]()
 
     def update_label(self, instance, value):
         value = int(instance.value)
-        self.slider_label.text = str(value)
+        self.marker_slider_label.text = str(value)
         self.state_dict["pnp"]["marker_size"] = value
         self.state_dict["functions"]["draw_corrs"]()
 
@@ -187,8 +225,10 @@ class ModelImageDisplay(ColBoxLayout):
 
     def on_click(self, pixel_coord):
         print("model click", pixel_coord)
-        self.state_dict["pnp"]["rend_select"] = pixel_coord
-        self.state_dict["functions"]["on_add_corr"]()
+        rend_depth = self.state_dict["pnp"]["rend_depth"]
+        if (rend_depth[pixel_coord[0], pixel_coord[1]]>0):
+            self.state_dict["pnp"]["rend_select"] = pixel_coord
+            self.state_dict["functions"]["on_add_corr"]()
 
     def set_texture(self, rgb_img):
         self.image_handler.set_texture(rgb_img)
@@ -246,22 +286,72 @@ class OverlapImageDisplay(ColBoxLayout):
         super().__init__(cp.FILESELECT_BG, orientation='vertical', size_hint=(0.33,1.0))
         self.state_dict = state_dict
         self.state_dict["functions"]["update_pnp"] = self.update_pnp
+        self.state_dict["functions"]["show_overlap_pnp"] = self.show_overlap_pnp
         img_path = state_dict["paths"]["selected_img"]
         self.rgb_img = read_rgb(img_path)
-        self.image_handler = DragZoomImage(self.rgb_img, cp.FILESELECT_BG)
-        self.add_widget(self.image_handler)
+        self.image_handler = None
 
     def update_pnp(self):
         corresps = self.state_dict["pnp"]["corresps"]
         num_corrs = len(corresps)
-        print("update pnp num corrs", num_corrs)
         if num_corrs < 5:
+            if self.image_handler is not None:
+                self.remove_widget(self.image_handler)
+                self.image_handler = None
             return
+        else:
+            if self.image_handler is None:
+                self.image_handler = DragZoomImage(self.rgb_img, cp.FILESELECT_BG)
+                self.add_widget(self.image_handler)
 
         rend_K = self.state_dict["pnp"]["rend_K"]
         rend_depth = self.state_dict["pnp"]["rend_depth"]
         img_corrs, rend_corrs = split_corresps(corresps)
-        corrs_3d = project_to_3d(rend_corrs, rend_depth, rend_K)
+        cam_K = self.state_dict["scene"]["cam_K"]
+        T_WC = self.state_dict["scene"]["T_wc"]
+        T_CW_guess = np.linalg.inv(T_WC)
+
+        rend_pix_coords = convert_indices_to_pix_coord(rend_corrs)
+        img_pix_coords = convert_indices_to_pix_coord(img_corrs)
+
+        points_C = project_to_3d(rend_pix_coords, rend_depth, rend_K)
+        points_W = transform_points(points_C.T, T_WC)
+
+        outlier_tresh = self.state_dict["pnp"]["reproj_error"]
+        T_CW, inliers = solve_pnp_ransac(points_W.T, img_pix_coords, cam_K, outlier_tresh, T_CW_guess)
+        print("inliers", inliers)
+        self.state_dict["pnp"]["T_WC_pnp"] = np.linalg.inv(T_CW)
+        self.render_pnp_pose()
+
+    def render_pnp_pose(self):
+        T_CW = np.linalg.inv(self.state_dict["pnp"]["T_WC_pnp"])
+        obj_path = self.state_dict["paths"]["selected_model"]
+        cam_K = self.state_dict["scene"]["cam_K"]
+        print("cam K", cam_K)
+        img_size = self.state_dict["pnp"]["cam_img"].shape[:2]
+        rgb, depth = render_scene(obj_path, T_CW, cam_K, img_size)
+        self.state_dict["pnp"]["rend_img_pnp"] = rgb
+        self.state_dict["pnp"]["rend_depth_pnp"] = depth
+        self.show_overlap_pnp()
+
+
+    def show_overlap_pnp(self):
+        corresps = self.state_dict["pnp"]["corresps"]
+        num_corrs = len(corresps)
+        if num_corrs < 5:
+            return
+        rend_pnp = self.state_dict["pnp"]["rend_img_pnp"] 
+        depth_pnp = self.state_dict["pnp"]["rend_depth_pnp"]
+        mask = np.where(depth_pnp>0, 1, 0)
+        cam_img = self.state_dict["pnp"]["cam_img"]
+        blend_alpha = self.state_dict["pnp"]["blend_alpha"]
+        overlap = blend_imgs(cam_img, rend_pnp, mask, blend_alpha)
+        self.image_handler.set_texture(overlap)
+
+
+
+
+
 
 
 

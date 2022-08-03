@@ -53,6 +53,7 @@ def init_state_dict():
             "draw_corrs":None,
             "update_sidebar_corrs":None,
             "update_pnp":None,
+            "show_overlap_pnp":None,
         },
         "paths":{
             "image_dir":None,
@@ -76,6 +77,12 @@ def init_state_dict():
             "rend_depth":None,
             "rend_K":None,
             "marker_size":3,
+            "T_WC_pnp":None,
+            "rend_img_pnp": None,
+            "rend_depth_pnp": None,
+            "blend_alpha":0.5,
+            "reproj_error":10,
+            "reproj_error":10,
         },
     }
     return state_dict

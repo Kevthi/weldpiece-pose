@@ -6,6 +6,7 @@ import json
 import cv2
 import matplotlib.pyplot as plt
 import colorsys
+import PIL
 
 
 def read_rgb(img_path):
@@ -190,6 +191,13 @@ def split_corresps(both_corresps):
     rend_corrs = [rend_corr for _, rend_corr in both_corresps]
     return img_corrs, rend_corrs
 
+def blend_imgs(real, rend, mask, alpha):
+    mask = np.dstack((mask,mask,mask))
+    pil_real = PIL.Image.fromarray(real)
+    pil_rend = PIL.Image.fromarray(rend)
+    blend = np.asarray(PIL.Image.blend(pil_real,pil_rend,alpha))
+    overlapped = np.where(mask>0, blend, real)
+    return overlapped
 
 
 
@@ -200,11 +208,12 @@ def split_corresps(both_corresps):
 
 if __name__ == '__main__':
     img1 = read_rgb("corner1-undist.png")
-    rgb_col = get_hue_color(0.33)
-    print(rgb_col)
-    img = draw_marker(img1, (500,500), rgb_col, 3)
-    plt.imshow(img)
-    plt.show()
-    plt.imshow(img1)
+    rend = read_rgb("render_pnp.png")
+    print(img1.shape)
+    print(rend.shape)
+    depth = np.load("depth.npy")
+    mask = np.where(depth>0, 1, 0)
+    overlap = blend_imgs(img1, rend, mask, 0.5)
+    plt.imshow(overlap)
     plt.show()
 
