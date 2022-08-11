@@ -1,0 +1,5 @@
+.PageWin {
+    display: flex;
+    background-color: pink;
+    height: 100%;
+}

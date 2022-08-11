@@ -1,0 +1,14 @@
+.Topbar {
+    width: 100%;
+}
+
+.TopbarTabRow {
+    background-color: darkblue;
+    display: flex;
+    height: 50px;
+}
+
+.TopbarRowBelow {
+    background-color: lightgray;
+    height: 50px;
+}
