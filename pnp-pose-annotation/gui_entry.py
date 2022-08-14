@@ -4,6 +4,7 @@ from gui_file_select import FileSelectGUI
 from gui_pnp import PnPGUI
 from gui_components import ColBoxLayout
 from gui_components import color_profile as cp
+from gui_aruco_graphopt import ArucoGraphoptGUI
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -48,12 +49,14 @@ def init_state_dict():
             "set_fs_tab":None,
             "set_ip_tab":None,
             "set_pnp_tab":None,
+            "set_aruco_graphopt_tab":None,
             "rerender":None,
             "on_add_corr":None,
             "draw_corrs":None,
             "update_sidebar_corrs":None,
             "update_pnp":None,
             "show_overlap_pnp":None,
+            "update_aruco_detect_display":None,
         },
         "paths":{
             "image_dir":None,
@@ -84,6 +87,11 @@ def init_state_dict():
             "reproj_error":10,
             "reproj_error":10,
         },
+        "aruco":{
+            "selected_img_idx": 0,
+        },
+        "pose_dict":{
+        }
     }
     return state_dict
 
@@ -95,16 +103,20 @@ class GUIMain(App):
         self.FILE_TABNAME = "Select Files"
         self.INIT_POSE_TABNAME = "Initialize pose"
         self.PNP_TABNAME = "Solve PnP"
+        self.ARUCO_GRAPHOPT_TABNAME = "Aruco graph optim"
+
 
         self.state_dict = init_state_dict()
         self.state_dict["functions"]["set_fs_tab"] = self.set_file_select_active
         self.state_dict["functions"]["set_ip_tab"] = self.set_pose_init_active
         self.state_dict["functions"]["set_pnp_tab"] = self.set_pnp_active
+        self.state_dict["functions"]["set_aruco_graphopt_tab"] = self.set_aruco_graphopt_active
 
         # temp for testing
-        self.state_dict["paths"]["selected_img"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner/captures/corner1-undist.png"
+        self.state_dict["paths"]["selected_img"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures/img_0-undist.png"
+        self.state_dict["paths"]["image_dir"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures"
         self.state_dict["paths"]["selected_model"] = "/home/ola/projects/weldpiece-pose-datasets/pnp-pose-annotation/corner.ply"
-        self.state_dict["paths"]["camera_info_path"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner/captures/info.json"
+        self.state_dict["paths"]["camera_info_path"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures/info.json"
 
 
 
@@ -121,7 +133,13 @@ class GUIMain(App):
             self.PNP_TABNAME: {
                 "callback":self.set_pnp_active,
                 "is_accessible":True,
+            },
+            self.ARUCO_GRAPHOPT_TABNAME:{
+                "callback":self.set_aruco_graphopt_active,
+                "is_accessible":True,
             }
+
+            
         }
 
 
@@ -154,6 +172,12 @@ class GUIMain(App):
         pnp_gui = PnPGUI(self.state_dict)
         main_win = self.rerender_mainwin(self.tab_dict, self.PNP_TABNAME)
         main_win.add_widget(pnp_gui)
+
+    def set_aruco_graphopt_active(self, btn_obj=None):
+        aruco_graphopt_win = ArucoGraphoptGUI(self.state_dict)
+        main_win = self.rerender_mainwin(self.tab_dict, self.ARUCO_GRAPHOPT_TABNAME)
+        main_win.add_widget(aruco_graphopt_win)
+
 
 
 if __name__ == '__main__':
