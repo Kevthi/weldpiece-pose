@@ -115,7 +115,7 @@ class GUIMain(App):
         # temp for testing
         self.state_dict["paths"]["selected_img"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures/img_0-undist.png"
         self.state_dict["paths"]["image_dir"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures"
-        self.state_dict["paths"]["selected_model"] = "/home/ola/projects/weldpiece-pose-datasets/pnp-pose-annotation/corner.ply"
+        self.state_dict["paths"]["selected_model"] = "/home/ola/projects/weldpiece-pose-datasets/3d-models/corner.ply"
         self.state_dict["paths"]["camera_info_path"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures/info.json"
 
 
