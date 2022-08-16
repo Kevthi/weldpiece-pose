@@ -57,6 +57,9 @@ def init_state_dict():
             "update_pnp":None,
             "show_overlap_pnp":None,
             "update_aruco_detect_display":None,
+            "render_aruco_img_select":None,
+            "render_save_pose_btn":None,
+            "render_aruco_graphopt_display_img":None,
         },
         "paths":{
             "image_dir":None,
@@ -89,6 +92,7 @@ def init_state_dict():
         },
         "aruco":{
             "selected_img_idx": 0,
+            "graphopt_is_solved":False,
         },
         "pose_dict":{
         }
@@ -117,6 +121,14 @@ class GUIMain(App):
         self.state_dict["paths"]["image_dir"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures"
         self.state_dict["paths"]["selected_model"] = "/home/ola/projects/weldpiece-pose-datasets/3d-models/corner.ply"
         self.state_dict["paths"]["camera_info_path"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures/info.json"
+        """
+        import pickle
+        with open('pose_dict.pkl', 'rb') as handle:
+            pose_dict = pickle.load(handle)
+
+        self.state_dict["pose_dict"] = pose_dict
+        """
+
 
 
 

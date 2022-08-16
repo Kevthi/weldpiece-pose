@@ -5,6 +5,9 @@ from renderer import PersistentRenderer
 import time
 import spatialmath as sm
 from debug import *
+import json
+import pickle
+import numpy as np
 
 from gui_components import color_profile as cp
 
@@ -23,14 +26,15 @@ class InitPoseSidebar(Sidebar):
         self.print_state_dict_btn.bind(on_press=self.print_state_dict)
         self.add_widget(self.print_state_dict_btn)
         self.add_widget(PoseButtonHandler(state_dict))
-
-
-
         self.add_widget(Widget())
 
     def print_state_dict(self, instance):
         print("\n\n ### State dict ###")
         nice_print_dict(self.state_dict)
+        K = self.state_dict["scene"]["cam_K"]
+        np.save("K.npy", K)
+        with open(r'pose_dict.pkl', 'wb') as outfile:
+            pickle.dump(self.state_dict["pose_dict"], outfile)
 
 class PoseButtonHandler(BoxLayout):
     def __init__(self,state_dict):

@@ -4,6 +4,7 @@ from renderer import render_thumbnail
 from gui_components import Sidebar, SidebarButton, ColBoxLayout, ColGridLayout, ColAnchorLayout, ColScrollView
 from gui_components import TextureImage
 from gui_utils import ask_directory, ask_file, get_image_paths_from_dir, read_rgb, get_files_from_dir, get_camera_matrix_json
+from gui_utils import read_json_to_dict
 from gui_components import color_profile as cp
 
 from kivy.uix.boxlayout import BoxLayout
@@ -244,6 +245,8 @@ class FileSelectGUI(BoxLayout):
         print("Img selected", self.state_dict["paths"]["selected_img"])
         print("Model selected", self.state_dict["paths"]["selected_model"])
         print("Camera info selected", self.state_dict["paths"]["camera_info_path"])
+
+        
         if (img_selected and model_selected and camera_info_selected):
             print("All selected")
             self.on_all_selected()
@@ -251,6 +254,9 @@ class FileSelectGUI(BoxLayout):
     def on_all_selected(self):
         img_path = self.state_dict["paths"]["selected_img"]
         cam_info_path = self.state_dict["paths"]["camera_info_path"]
+        if len(self.state_dict["pose_dict"]) == 0:
+            cam_info_dict = read_json_to_dict(cam_info_path)
+            self.state_dict["pose_dict"] = cam_info_dict
         print("on all selected")
         cam_mat = get_camera_matrix_json(cam_info_path, img_path)
         self.state_dict["scene"]["cam_K"] = cam_mat

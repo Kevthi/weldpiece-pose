@@ -35,6 +35,7 @@ from image_component import DragZoomImage
 
 import cv2
 import numpy as np
+import os
 
 
 
@@ -49,6 +50,7 @@ class PnPSidebar(Sidebar):
         self.add_reproj_error_slidebar()
         self.corr_display = AllCorrDisplay(state_dict)
         self.add_widget(self.corr_display)
+        self.add_widget(SavePoseBtn(state_dict))
         self.add_widget(Widget())
 
 
@@ -105,6 +107,44 @@ class PnPSidebar(Sidebar):
         self.state_dict["pnp"]["marker_size"] = value
         self.state_dict["functions"]["draw_corrs"]()
 
+class SavePoseBtn(BoxLayout):
+    def __init__(self, state_dict):
+        super().__init__(orientation='vertical', size_hint=(1.0,None), height=100)
+        self.state_dict = state_dict
+        header = SidebarHeader(text="Save current pose", font_size=20)
+        self.add_widget(header)
+        self.state_dict["functions"]["render_save_pose_btn"] = self.render_save_pose_btn
+
+    def render_save_pose_btn(self):
+        corresps = self.state_dict["pnp"]["corresps"]
+        num_corrs = len(corresps)
+        self.clear_widgets()
+        header = SidebarHeader(text="Save current pose", font_size=20)
+        self.add_widget(header)
+        if (num_corrs < 5):
+            self.add_widget(Button(text=f'Need {5-num_corrs} more correspondences', size_hint=(1.0,None), height=50))
+        else:
+            save_pose_btn = Button(text=f'Save', size_hint=(1.0,None), height=50, background_color=cp.PNP_SAVE_POSE_BTN)
+            self.add_widget(save_pose_btn)
+            save_pose_btn.bind(on_press=self.on_save_pose)
+
+    def on_save_pose(self, btn_instance=None):
+        img_name = os.path.basename(self.state_dict["paths"]["selected_img"])
+        T_WC_pnp = self.state_dict["pnp"]["T_WC_pnp"]
+        self.state_dict["pose_dict"][img_name]["T_CO"] = np.linalg.inv(T_WC_pnp)
+        self.state_dict["pose_dict"][img_name]["pose_set_with_pnp"] = True
+        print(f'Saving pose to {img_name}')
+
+
+
+
+
+
+
+
+
+
+        
 
 class SingleCorrDisplay(BoxLayout):
     def __init__(self, state_dict, color, idx, corr_tup):
@@ -294,6 +334,7 @@ class OverlapImageDisplay(ColBoxLayout):
     def update_pnp(self):
         corresps = self.state_dict["pnp"]["corresps"]
         num_corrs = len(corresps)
+        self.state_dict["functions"]["render_save_pose_btn"]()
         if num_corrs < 5:
             if self.image_handler is not None:
                 self.remove_widget(self.image_handler)
@@ -369,6 +410,10 @@ class PnPGUI(BoxLayout):
 
         bot_box_layot = ColBoxLayout(cp.FILESELECT_BG, orientation='horizontal', size_hint=(1.0,0.35))
         self.vert_layout.add_widget(bot_box_layot)
+
+
+
+
 
 
 

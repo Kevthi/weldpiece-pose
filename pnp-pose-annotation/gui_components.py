@@ -52,6 +52,10 @@ class ColorProfile():
         self.PNP_SLIDER_BG = NTNU_BLUE
         self.PNP_SIDEBAR_CORR = DARKER_GRAY
         self.PNP_CORR_WIN_BG = GRAY
+        self.PNP_SAVE_POSE_BTN =np.array(NTNU_BLUE)/KIVY_DEF_BTN_COL 
+
+        #ARUCO
+        self.AR_SELECTED_IMG_BG = NTNU_BLUE_LIGHT
         
 
 

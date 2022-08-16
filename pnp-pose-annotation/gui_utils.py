@@ -8,6 +8,17 @@ import matplotlib.pyplot as plt
 import colorsys
 import PIL
 
+def merge_dict(source, destination):
+    for key, value in source.items():
+        if isinstance(value, dict):
+            # get node or create one
+            node = destination.setdefault(key, {})
+            merge_dict(value, node)
+        else:
+            destination[key] = value
+
+    return destination
+
 
 def read_rgb(img_path):
     return cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
