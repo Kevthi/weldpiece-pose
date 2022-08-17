@@ -4,35 +4,46 @@ from cv2 import aruco
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def run_webcam(cam, aruko_dict):
+def get_aruko_poses(img, K, aruco_dict, aruko_sq_size):
     ar_params = aruco.DetectorParameters_create()
+    (marker_corners, marker_ids, rejected) = aruco.detectMarkers(img, aruco_dict, parameters=ar_params)
+    dist = np.zeros(5)
+    aruko_poses = []
+    if marker_ids is not None and len(marker_ids) > 0:
+        img = aruco.drawDetectedMarkers(img, marker_corners, marker_ids)
+        for single_marker_corner, marker_id in zip(marker_corners, marker_ids):
+            rvec,tvec,obj_p_corners = aruco.estimatePoseSingleMarkers(single_marker_corner, aruko_sq_size, K, dist)
+            aruko_poses.append((marker_id, rvec,tvec))
+    return aruko_poses
+
+
+
+def draw_markers(img, K, aruco_dict):
+    ar_params = aruco.DetectorParameters_create()
+    (marker_corners, marker_ids, rejected) = aruco.detectMarkers(img, aruco_dict, parameters=ar_params)
+    dist = np.zeros(5)
+    if marker_ids is not None and len(marker_ids) > 0:
+        img = aruco.drawDetectedMarkers(img, marker_corners, marker_ids)
+        for single_marker_corner, marker_id in zip(marker_corners, marker_ids):
+            rvec,tvec,obj_p_corners = aruco.estimatePoseSingleMarkers(single_marker_corner, 66.0*1e-3, K, dist)
+            cv2.drawFrameAxes(img, K, dist, rvec,tvec,0.05)
+    return img
+
+
+
+def run_webcam(cam, aruko_dict, K, dist):
     i = 0
     while(True):
         ret, img = cam.get_camera_image()
-        show_img = img
-        img_copy = img.copy()
+        undist_img = cv2.undistort(img, K, dist)
+        show_img = draw_markers(undist_img, K, aruko_dict)
 
-        (marker_corners, marker_ids, rejected) = aruco.detectMarkers(img_copy, aruco_dict, parameters=ar_params)
-        if marker_ids is not None and len(marker_ids) > 0:
-            img_copy = aruco.drawDetectedMarkers(img_copy, marker_corners, marker_ids)
-            show_img = img_copy
+
 
         cv2.imshow("show_img", show_img)
         i+=1
         if cv2.waitKey(1)& 0xFF ==ord("q"):
             break
-
-def viz_board(aruco_dict):
-    board = aruco.GridBoard_create(2,3,1,1,aruco_dict)
-    img = board.draw((500,500))
-    plt.imshow(img)
-    plt.show()
-
-def draw_marker(aruco_dict, m_id):
-    img = aruco.drawMarker(aruco_dict, m_id, 200)
-    plt.imshow(img)
-    plt.show()
 
 
 if __name__ == '__main__':
@@ -58,10 +69,8 @@ if __name__ == '__main__':
 
     cam =WebcamHandler(0, cam_conf)
 
-    aruco_dict = cv2.aruco.Dictionary_get(aruco.DICT_5X5_250)
+    aruco_dict = cv2.aruco.Dictionary_get(aruco.DICT_APRILTAG_16h5)
     #aruco_dict.bytesList=aruco_dict.bytesList[30:,:,:]
-    viz_board(aruco_dict)
     #draw_marker(aruco_dict, 0)
     #board = aruco.CharucoBoard_create(6, 8, 32.521*1e-3, 32.521*1e-3/2.0, aruco_dict)
-    #run_webcam(cam, aruco_dict)
-    print("main")
+    run_webcam(cam, aruco_dict, K, dist)
