@@ -8,6 +8,7 @@ from debug import *
 import json
 import pickle
 import numpy as np
+import rhovee
 
 from gui_components import color_profile as cp
 
@@ -61,6 +62,9 @@ class PoseButtonHandler(BoxLayout):
         rot = sm.SE3.Rz(-10, unit='deg').data[0]
         T_wc = self.state_dict["scene"]["T_wc"] 
         T_wc_new = rot@T_wc
+        T_wc_new = rhovee.SE3.SVDO(T_wc_new)
+        print(T_wc_new)
+
         self.state_dict["scene"]["T_wc"] = T_wc_new
         self.state_dict["functions"]["rerender"]()
 
@@ -69,6 +73,8 @@ class PoseButtonHandler(BoxLayout):
         rot = sm.SE3.Rz(10, unit='deg').data[0]
         T_wc = self.state_dict["scene"]["T_wc"] 
         T_wc_new = rot@T_wc
+        T_wc_new = rhovee.SE3.SVDO(T_wc_new)
+        print(T_wc_new)
         self.state_dict["scene"]["T_wc"] = T_wc_new
         self.state_dict["functions"]["rerender"]()
 
@@ -76,6 +82,8 @@ class PoseButtonHandler(BoxLayout):
         rot = sm.SE3.Rx(-10, unit='deg').data[0]
         T_wc = self.state_dict["scene"]["T_wc"] 
         T_wc_new = rot@T_wc
+        T_wc_new = rhovee.SE3.SVDO(T_wc_new)
+        print(T_wc_new)
         self.state_dict["scene"]["T_wc"] = T_wc_new
         self.state_dict["functions"]["rerender"]()
 
@@ -83,6 +91,8 @@ class PoseButtonHandler(BoxLayout):
         rot = sm.SE3.Rx(10, unit='deg').data[0]
         T_wc = self.state_dict["scene"]["T_wc"] 
         T_wc_new = rot@T_wc
+        T_wc_new = rhovee.SE3.SVDO(T_wc_new)
+        print(T_wc_new)
         self.state_dict["scene"]["T_wc"] = T_wc_new
         self.state_dict["functions"]["rerender"]()
 
@@ -90,6 +100,8 @@ class PoseButtonHandler(BoxLayout):
         rot = sm.SE3.Ry(-10, unit='deg').data[0]
         T_wc = self.state_dict["scene"]["T_wc"] 
         T_wc_new = rot@T_wc
+        T_wc_new = rhovee.SE3.SVDO(T_wc_new)
+        print(T_wc_new)
         self.state_dict["scene"]["T_wc"] = T_wc_new
         self.state_dict["functions"]["rerender"]()
 
@@ -97,6 +109,8 @@ class PoseButtonHandler(BoxLayout):
         rot = sm.SE3.Ry(10, unit='deg').data[0]
         T_wc = self.state_dict["scene"]["T_wc"] 
         T_wc_new = rot@T_wc
+        T_wc_new = rhovee.SE3.SVDO(T_wc_new)
+        print(T_wc_new)
         self.state_dict["scene"]["T_wc"] = T_wc_new
         self.state_dict["functions"]["rerender"]()
 
@@ -104,6 +118,7 @@ class PoseButtonHandler(BoxLayout):
         rot = sm.SE3.Rx(180, unit='deg').data[0]
         T_wc = self.state_dict["scene"]["T_wc"] 
         T_wc_new = rot@T_wc
+        T_wc_new = rhovee.SE3.SVDO(T_wc_new)
         self.state_dict["scene"]["T_wc"] = T_wc_new
         self.state_dict["functions"]["rerender"]()
 
@@ -111,6 +126,7 @@ class PoseButtonHandler(BoxLayout):
         rot = sm.SE3.Ry(180, unit='deg').data[0]
         T_wc = self.state_dict["scene"]["T_wc"] 
         T_wc_new = rot@T_wc
+        T_wc_new = rhovee.SE3.SVDO(T_wc_new)
         self.state_dict["scene"]["T_wc"] = T_wc_new
         self.state_dict["functions"]["rerender"]()
 
@@ -118,6 +134,7 @@ class PoseButtonHandler(BoxLayout):
         rot = sm.SE3.Rz(180, unit='deg').data[0]
         T_wc = self.state_dict["scene"]["T_wc"] 
         T_wc_new = rot@T_wc
+        T_wc_new = rhovee.SE3.SVDO(T_wc_new)
         self.state_dict["scene"]["T_wc"] = T_wc_new
         self.state_dict["functions"]["rerender"]()
 

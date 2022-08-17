@@ -30,6 +30,7 @@ from threading import Thread
 import time
 
 from image_component import DragZoomImage
+import rhovee
 
 
 
@@ -131,7 +132,7 @@ class SavePoseBtn(BoxLayout):
     def on_save_pose(self, btn_instance=None):
         img_name = os.path.basename(self.state_dict["paths"]["selected_img"])
         T_WC_pnp = self.state_dict["pnp"]["T_WC_pnp"]
-        self.state_dict["pose_dict"][img_name]["T_CO"] = np.linalg.inv(T_WC_pnp)
+        self.state_dict["pose_dict"][img_name]["T_CO"] = rhovee.SE3.inv(T_WC_pnp)
         self.state_dict["pose_dict"][img_name]["pose_set_with_pnp"] = True
         print(f'Saving pose to {img_name}')
 
@@ -240,9 +241,10 @@ class ModelImageDisplay(ColBoxLayout):
         K_new, img_size = convert_cam_mat(K, orig_img_size, WIDTH)
         print("K_new", K_new)
         print("img size", img_size)
+
         
 
-        rgb_img, depth = render_scene(model_path, np.linalg.inv(T_WC), K_new, img_size)
+        rgb_img, depth = render_scene(model_path, rhovee.SE3.inv(T_WC), K_new, img_size)
         self.state_dict["pnp"]["rend_img"] = rgb_img
         self.state_dict["pnp"]["rend_depth"] = depth
         self.state_dict["pnp"]["rend_K"] = K_new

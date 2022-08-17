@@ -12,6 +12,7 @@ import pyrender
 from PIL import Image
 from se3_helpers import get_T_CO_init_and_gt, look_at_SE3
 import cv2
+import rhovee
 
 class PersistentRenderer():
     def __init__(self, model_path, K, T_WC, img_size):
@@ -101,7 +102,9 @@ def render(scene, img_size):
 
 def render_scene(object_path, T_CO, K, img_size, bg_color=(1.0,1.0,1.0)):
     assert T_CO.shape == (4,4)
+    print(T_CO)
     T_CO = sm.SE3.Rx(180, unit='deg').data[0]@T_CO # convert from OpenCV camera frame to OpenGL camera frame
+    T_CO = rhovee.SE3.SVDO(T_CO)
     scene = pyrender.Scene()
     scene.bg_color = bg_color
     add_object(scene, object_path)

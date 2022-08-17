@@ -41,6 +41,9 @@ class FileSelectCard(ColBoxLayout):
         self.update_color(cp.FS_SELECTED_CARD)
         self.set_path_cb(self.path)
         self.state_dict["functions"]["on_files_selected"]()
+        self.state_dict["pnp"]["corresps"] = []
+        self.state_dict["pnp"]["img_select"] = None
+        self.state_dict["pnp"]["rend_select"] = None
 
 class CardGrid(ColGridLayout):
     def __init__(self):

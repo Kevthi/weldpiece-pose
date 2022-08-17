@@ -88,7 +88,6 @@ def init_state_dict():
             "rend_depth_pnp": None,
             "blend_alpha":0.5,
             "reproj_error":10,
-            "reproj_error":10,
         },
         "aruco":{
             "selected_img_idx": 0,
@@ -117,10 +116,11 @@ class GUIMain(App):
         self.state_dict["functions"]["set_aruco_graphopt_tab"] = self.set_aruco_graphopt_active
 
         # temp for testing
-        self.state_dict["paths"]["selected_img"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures/img_0-undist.png"
-        self.state_dict["paths"]["image_dir"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures"
-        self.state_dict["paths"]["selected_model"] = "/home/ola/projects/weldpiece-pose-datasets/3d-models/corner.ply"
-        self.state_dict["paths"]["camera_info_path"] = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/office-corner-brio/captures/info.json"
+        ds_project = "office-corner-brio-charuco"
+        self.state_dict["paths"]["selected_img"] = f'/home/ola/projects/weldpiece-pose-datasets/ds-projects/{ds_project}/captures/img_0-undist.png'
+        self.state_dict["paths"]["image_dir"] = f'/home/ola/projects/weldpiece-pose-datasets/ds-projects/{ds_project}/captures'
+        self.state_dict["paths"]["selected_model"] = f'/home/ola/projects/weldpiece-pose-datasets/3d-models/corner.ply'
+        self.state_dict["paths"]["camera_info_path"] = f'/home/ola/projects/weldpiece-pose-datasets/ds-projects/{ds_project}/captures/info.json'
         """
         import pickle
         with open('pose_dict.pkl', 'rb') as handle:
