@@ -6,7 +6,8 @@ from kivy.uix.widget import Widget
 from gui_components import Sidebar, ColBoxLayout, TextureImage, ColScrollView, SidebarHeader
 from gui_components import color_profile as cp
 from gui_utils import get_image_paths_from_dir, read_rgb, blend_imgs
-from aruco_graphopt import draw_markers, aruko_optimize_handler
+from aruco_graphopt import aruko_optimize_handler
+from charuco_board_utils import draw_markers_board
 from gui_utils import get_image_paths_from_dir, merge_dict
 from renderer import render_scene
 import os
@@ -144,7 +145,7 @@ class ArucoDetectDisplay(TextureImage):
         selected_img = image_paths[selected_img_idx]
         K = self.state_dict["scene"]["cam_K"]
         rgb_img = read_rgb(selected_img)
-        rgb_img = draw_markers(rgb_img, K,"DICT_APRILTAG_16h5")
+        rgb_img = draw_markers_board(rgb_img, K,"DICT_APRILTAG_16h5")
         return rgb_img
 
     def update_aruco_detect_display(self):
@@ -156,7 +157,8 @@ class ArucoDetectDisplay(TextureImage):
 class ArucoOptPoseDisplay(TextureImage):
     def __init__(self, state_dict):
         self.state_dict = state_dict
-        rgb_img = np.zeros((1080,1080,3))
+        rgb_shape = self.state_dict["scene"]["orig_img_size"]
+        rgb_img = np.zeros((rgb_shape[0],rgb_shape[1],3))
         super().__init__(rgb_img)
         self.state_dict["functions"]["render_aruco_graphopt_display_img"] = self.render_aruco_graphopt_display_img
 

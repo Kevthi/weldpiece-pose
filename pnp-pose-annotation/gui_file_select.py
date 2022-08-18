@@ -265,6 +265,7 @@ class FileSelectGUI(BoxLayout):
         self.state_dict["scene"]["cam_K"] = cam_mat
         img_shape = read_rgb(img_path).shape[:2]
         orig_img_size = [img_shape[1], img_shape[0]]
+        print("orig img size", orig_img_size)
         self.state_dict["scene"]["orig_img_size"] = orig_img_size
         print(cam_mat)
         if not self.go_to_next_added:

@@ -92,6 +92,9 @@ def init_state_dict():
         "aruco":{
             "selected_img_idx": 0,
             "graphopt_is_solved":False,
+            "aruco_dict_str": "DICT_APRILTAG_16H5",
+            "use_board":True,
+            "markers_per_board":6,
         },
         "pose_dict":{
         }
@@ -116,7 +119,7 @@ class GUIMain(App):
         self.state_dict["functions"]["set_aruco_graphopt_tab"] = self.set_aruco_graphopt_active
 
         # temp for testing
-        ds_project = "office-corner-brio-charuco"
+        ds_project = "office-corner-brio-4k-charuco"
         self.state_dict["paths"]["selected_img"] = f'/home/ola/projects/weldpiece-pose-datasets/ds-projects/{ds_project}/captures/img_0-undist.png'
         self.state_dict["paths"]["image_dir"] = f'/home/ola/projects/weldpiece-pose-datasets/ds-projects/{ds_project}/captures'
         self.state_dict["paths"]["selected_model"] = f'/home/ola/projects/weldpiece-pose-datasets/3d-models/corner.ply'
