@@ -7,12 +7,16 @@ import numpy as np
 #A4_X = 297
 A4_Y = 195.0 # printable area
 A4_X = 276.0 # printable area
+
+#A4_X = 420.0
+#A4_Y = 297.0
+
 A4_XY_RATIO = A4_X/A4_Y
 
 def create_board(squares_x, squares_y, cb_sq_width, aruco_sq_width, aruco_dict_str, start_id):
     aruco_dict = aruco.Dictionary_get(getattr(aruco, aruco_dict_str))
     aruco_dict.bytesList=aruco_dict.bytesList[start_id:,:,:]
-    board = aruco.CharucoBoard_create(squares_x,squares_y,1,aruco_sq_width,aruco_dict)
+    board = aruco.CharucoBoard_create(squares_x,squares_y,cb_sq_width,aruco_sq_width,aruco_dict)
     return board
 
 
@@ -22,7 +26,7 @@ def create_printable_aruco_grid(aruco_dict_str, px_width, squares_x,squares_y, s
     px_per_mm = px_width/A4_X
     print("px per mm", px_per_mm)
     #board = aruco.CharucoBoard_create(squares_x,squares_y,1,spacing_ratio,aruco_dict)
-    board = create_board(squares_x, squares_y, px_width, spacing_ratio, aruco_dict_str, start_id)
+    board = create_board(squares_x, squares_y, 1, spacing_ratio, aruco_dict_str, start_id)
     px_height = np.round(px_width/A4_XY_RATIO, 0)
 
 
@@ -68,13 +72,15 @@ if __name__ == '__main__':
     #aruco_dict = aruco.Dictionary_get(aruco.DICT_APRILTAG_16h5)
     aruco_dict_str = "DICT_APRILTAG_16H5"
     px_width = 4000
-    squares_x = 4
+    squares_x = 3
     squares_y = 3
     spacing_ratio = 0.65
-    start_id = 6
-    img = create_printable_aruco_grid(aruco_dict_str, px_width, squares_x, squares_y, spacing_ratio, start_id, 200)
-    plt.imshow(img)
-    plt.show()
-    cv2.imwrite(f'/home/ola/Pictures/charuco_stID{start_id}_{str(squares_x)+"x"+str(squares_y)}_apriltag16h5.png', img)
+    for i in range(0, 7):
+        start_id = i*4
+        print(start_id)
+        img = create_printable_aruco_grid(aruco_dict_str, px_width, squares_x, squares_y, spacing_ratio, start_id, 200)
+        plt.imshow(img)
+        plt.show()
+        cv2.imwrite(f'/home/ola/Pictures/AT3x3/charuco_stID{start_id}_{str(squares_x)+"x"+str(squares_y)}_apriltag16h5.png', img)
 
     pass

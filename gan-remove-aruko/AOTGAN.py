@@ -172,35 +172,70 @@ def mask_to_tensor(mask):
     return (ToTensor()(mask).unsqueeze(0))
 
 def reconstruct_img(pred_tnsr, tnsr_mask, tnsr_img):
-    return (pred_tnsr * tnsr_mask + tnsr_img * (1 - tnsr_mask))
+    img =  (pred_tnsr * tnsr_mask + tnsr_img * (1 - tnsr_mask))
+    print("reconstruct img", img.shape)
+    return img
+
+def create_3d_mask(mask):
+    return np.dstack((mask,mask,mask))
+
+
+def run_inpaint(img, mask, model, inference_size=(512,512), device='cpu'):
+    print("run_inpaint img shape", img.shape)
+    model.to(device)
+    assert(img.shape[0] == mask.shape[0] and img.shape[1] == mask.shape[1])
+    orig_size = mask.shape
+    print("orig size", orig_size)
+    mask = mask.astype(np.uint8)
+    rz_mask = cv2.resize(mask, inference_size)
+    rz_img = cv2.resize(img, inference_size)
+    print("rz img", rz_img.shape)
+    rz_mask = np.where(rz_mask>0, 1, 0)
+
+    tnsr_img = img_to_tensor(rz_img).to(device)
+    tnsr_mask = mask_to_tensor(rz_mask).to(device)
+    print(tnsr_img.shape)
+    print(tnsr_mask.shape)
+    pred_tensor = model(tnsr_img,tnsr_mask)
+    pred_tensor = pred_tensor.detach()
+    comp_tensor = reconstruct_img(pred_tensor, tnsr_mask, tnsr_img)
+    processed_img = np.array(comp_tensor[0]).astype(np.uint8)
+    print("processed img", processed_img.shape)
+    orig_size_proc_img = cv2.resize(processed_img, orig_size)
+    mask_3d = create_3d_mask(mask)
+    out_img = np.where(mask_3d>0, orig_size-proc, img)
+
+    return postprocess(comp_tensor[0])
+
+def get_model():
+    block_num = 8
+    rates=[1, 2, 4, 8]
+    pretrain_path = "G0000000.pt"
+    model = InpaintGenerator(rates, block_num)
+    model.load_state_dict(torch.load(pretrain_path, map_location='cpu'))
+    model.eval()
+    return model
+
+
+
+
 
 
 
 if __name__ == '__main__':
     pass
-    block_num = 8
-    rates=[1, 2, 4, 8]
     #pretrain_path = "/home/ola/temp/AOT-GAN-for-Inpainting/experiments/places2/G0000000.pt"
-    pretrain_path = "G0000000.pt"
-    model = InpaintGenerator(rates, block_num)
-    model.load_state_dict(torch.load(pretrain_path, map_location='cpu'))
-    model.eval()
     img_path = "/home/ola/projects/computer-vision/kivy-calibration-app/aruko-dir/corner-brio1080-aruko/img_0.png"
+    model = get_model()
     img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
     mask = np.zeros(img.shape[:2])
     mask = cv2.circle(mask, (500,500), 200, 1, 50)
     mask = np.where(mask>0, 1,0)
 
-    tnsr_img = img_to_tensor(img)
-    tnsr_mask = mask_to_tensor(mask)
+    out = run_inpaint(img,mask, model, device='cuda')
+    plt.imshow(out)
+    plt.show()
 
-    pred_tensor = model(tnsr_img,tnsr_mask)
-    pred_tensor = pred_tensor.detach()
-    comp_tensor = reconstruct_img(pred_tensor, tnsr_mask, tnsr_img)
-    plt.imshow(postprocess(pred_tensor[0]))
-    plt.show()
-    plt.imshow(postprocess(comp_tensor[0]))
-    plt.show()
 
 
 
