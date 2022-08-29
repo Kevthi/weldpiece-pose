@@ -96,8 +96,6 @@ class PnPSidebar(Sidebar):
 
 
     def update_blend_alpha(self, instance, value):
-        print("update blend alpha")
-        print(value/100.0)
         self.blend_slider_label.text = str(value/100.0)
         self.state_dict["pnp"]["blend_alpha"] = value/100.0
         self.state_dict["functions"]["show_overlap_pnp"]()

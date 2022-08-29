@@ -11,7 +11,7 @@ def create_board(squares_x, squares_y, cb_sq_width, aruco_sq_width, aruco_dict_s
     board = aruco.CharucoBoard_create(squares_x,squares_y,cb_sq_width,aruco_sq_width,aruco_dict)
     return board, aruco_dict
 
-def get_aruco_board_pose(img, K, board,aruco_dict, use_cr_at=True):
+def get_aruco_board_pose(img, K, board,aruco_dict, use_cr_at=False):
     ar_params = aruco.DetectorParameters_create()
     if use_cr_at:
         ar_params.cornerRefinementMethod = aruco.CORNER_REFINE_APRILTAG

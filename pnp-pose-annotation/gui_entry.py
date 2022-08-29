@@ -60,6 +60,8 @@ def init_state_dict():
             "render_aruco_img_select":None,
             "render_save_pose_btn":None,
             "render_aruco_graphopt_display_img":None,
+            "show_overlap_graphopt":None,
+            "update_gan_remove_aruco_display":None,
         },
         "paths":{
             "image_dir":None,
@@ -90,11 +92,20 @@ def init_state_dict():
             "reproj_error":10,
         },
         "aruco":{
+            "aruco_info":{
+                "aruco_dict_str": "DICT_APRILTAG_16H5",
+                "use_board":True,
+                "markers_per_board":4,
+                "board_shape":(3,3),
+                "square_sz":56*1e-3,
+                "aruco_sz":35*1e-3,
+            },
             "selected_img_idx": 0,
             "graphopt_is_solved":False,
-            "aruco_dict_str": "DICT_APRILTAG_16H5",
-            "use_board":True,
-            "markers_per_board":6,
+            "blend_alpha":0.5,
+            "rend_img_graphopt":None,
+            "rend_depth_graphopt":None,
+            "rgb_img_graphopt":None,
         },
         "pose_dict":{
         }

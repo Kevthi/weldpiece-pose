@@ -25,6 +25,7 @@ class ColorProfile():
         GRAY = [0.85,0.85,0.85]
         DARKER_GRAY = [0.75,0.75,0.75]
         DARKEST_GRAY = [0.60,0.60,0.60]
+        BLACK_GRAY = [0.3,0.3,0.3]
 
         self.BLACK_TEXT = BLACK
         self.WHITE_TEXT = WHITE
@@ -56,6 +57,7 @@ class ColorProfile():
 
         #ARUCO
         self.AR_SELECTED_IMG_BG = NTNU_BLUE_LIGHT
+        self.EXPORT_OPTION_BG = BLACK_GRAY
         
 
 

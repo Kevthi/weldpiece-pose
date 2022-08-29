@@ -254,12 +254,18 @@ class FileSelectGUI(BoxLayout):
             print("All selected")
             self.on_all_selected()
 
+    def init_pose_dict(self, pose_dict):
+        for key in pose_dict:
+            pose_dict[key]["export"] = True
+
+
     def on_all_selected(self):
         img_path = self.state_dict["paths"]["selected_img"]
         cam_info_path = self.state_dict["paths"]["camera_info_path"]
         if len(self.state_dict["pose_dict"]) == 0:
             cam_info_dict = read_json_to_dict(cam_info_path)
             self.state_dict["pose_dict"] = cam_info_dict
+            self.init_pose_dict(self.state_dict["pose_dict"])
         print("on all selected")
         cam_mat = get_camera_matrix_json(cam_info_path, img_path)
         self.state_dict["scene"]["cam_K"] = cam_mat

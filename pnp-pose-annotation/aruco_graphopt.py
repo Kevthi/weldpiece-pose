@@ -92,7 +92,7 @@ def create_edges_graphslam(image_pose_dict, id_vert_dict, pose_dict, g2o_graph):
 
     print("#¤%&/()      CREATE EDGES GRAPHSLAM")
     nice_print_dict(image_pose_dict)
-    aruko_info_mat = np.identity(6).astype(np.float32)*1.0
+    aruko_info_mat = np.identity(6).astype(np.float32)*3.0
     model_info_mat = np.identity(6).astype(np.float32)*1.0
     #inf_mat_model = np.identity(6).astype(np.float32)
     for image_basename in image_pose_dict:
@@ -107,7 +107,7 @@ def create_edges_graphslam(image_pose_dict, id_vert_dict, pose_dict, g2o_graph):
             if marker_idx == 'model':
                 info_mat = model_info_mat
             else:
-                info_mat = aruko_info_mat
+                info_mat = aruko_info_mat/np.linalg.norm(T_CA[:3,3])
             g2o_graph.add_edge([idx_cam, marker_idx], g2o.Isometry3d(T_CA[:3,:3], T_CA[:3,3]), info_mat, g2o.RobustKernelHuber(np.sqrt(5.991)))
 
 def init_vertices_graphslam(init_graph, g2o_graph):
@@ -164,38 +164,5 @@ def aruko_optimize_handler(img_paths, K, aruco_dict_str, aruco_sq_size, pose_dic
 
 
 if __name__ == '__main__':
-    with open('pose_dict.pkl', 'rb') as handle:
-        pose_dict = pickle.load(handle)
-
-    base_path = "/home/ola/projects/weldpiece-pose-datasets/ds-projects/"
-    ds_project = "office-corner-brio-4k-charuco"
-    obj_path = "/home/ola/projects/weldpiece-pose-datasets/3d-models/corner.ply"
-
-    img_dir = base_path + ds_project + "/captures"
-    K_path = base_path + ds_project + "/K.npy"
-
-    K = np.load(K_path)
-    K = K.astype(np.float64)
-
-    img_paths = get_image_paths_from_dir(img_dir)
-    aruco_dict_str = "DICT_APRILTAG_16H5"
-    aruco_sq_size = 49.9*1e-3
-
-    opt_dict = aruko_optimize_handler(img_paths, K, aruco_dict_str, aruco_sq_size, pose_dict)
-
-
-    nice_print_dict(opt_dict)
-
-    for key in opt_dict:
-        T_CO = opt_dict[key]["T_CO_opt"]
-        print("T_CO render")
-        print(T_CO)
-        rgb = read_rgb(img_dir + "/" + key)
-        rend_rgb, dep = render_scene(obj_path, T_CO, K, (2160,2160))
-        mask = np.where(dep>0, 1, 0)
-        blend_alpha = 0.5
-        overlap = blend_imgs(rgb, rend_rgb, mask, blend_alpha)
-        plt.imshow(overlap)
-        plt.show()
-
+    pass
 
