@@ -1,0 +1,4 @@
+ArUco code are  type of image-code that work in similar way as qr-code.
+
+
+ChArUco is a chessboard, where each white square consist of a ArUco-code

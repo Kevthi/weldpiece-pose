@@ -5,13 +5,38 @@ import numpy as np
 from gui_utils import read_rgb
 
 
-def create_board(squares_x, squares_y, cb_sq_width, aruco_sq_width, aruco_dict_str, start_id):
+def create_board(squares_x: int, squares_y: int, cb_sq_width: float, 
+                 aruco_sq_width: float, aruco_dict_str: str, start_id: int) -> tuple:
+    """Creates a ChArUco board with defined squares and ArUco markers.
+
+    Args:
+        squares_x (int): Number of squares in X direction
+        squares_y (int): Number of squares in Y direction
+        cb_sq_width (float): Size of each chessboard square (in desired units)
+        aruco_sq_width (float): Size of each ArUco marker (in desired units)
+        aruco_dict_str (str): ArUco dictionary name (e.g. 'DICT_6X6_250')
+        start_id (int): Starting ID for ArUco markers subset
+
+    Returns:
+        tuple: A tuple containing:
+            - board: The created ChArUco board object
+            - aruco_dict: The modified ArUco dictionary
+
+    Example:
+        >>>> board, aruco_dict = create_board(5, 7, 0.04, 0.02, 'DICT_6X6_250', 0)
+    """
     aruco_dict = aruco.Dictionary_get(getattr(aruco, aruco_dict_str))
-    aruco_dict.bytesList=aruco_dict.bytesList[start_id:,:,:]
-    board = aruco.CharucoBoard_create(squares_x,squares_y,cb_sq_width,aruco_sq_width,aruco_dict)
+    aruco_dict.bytesList = aruco_dict.bytesList[start_id:,:,:]
+    board = aruco.CharucoBoard_create(squares_x, squares_y, cb_sq_width, 
+                                     aruco_sq_width, aruco_dict)
     return board, aruco_dict
 
-def get_aruco_board_pose(img, K, board,aruco_dict, use_cr_at=False):
+def get_aruco_board_pose(img: np.ndarray, camera_int: np.ndarray, board, aruco_dict: aruco.Dictionary, use_cr_at=False):
+    """
+    
+    
+    
+    """
     ar_params = aruco.DetectorParameters_create()
     if use_cr_at:
         ar_params.cornerRefinementMethod = aruco.CORNER_REFINE_APRILTAG
