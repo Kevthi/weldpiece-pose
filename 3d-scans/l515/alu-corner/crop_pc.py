@@ -14,7 +14,8 @@ def crop_mesh(mesh):
     return mesh
 
 
-def crop_pc_handler(pc_dir, export_dir, xy_lim=1):
+def crop_pc_handler(pc_dir : str, export_dir : str, xy_lim=1):
+    """Crop point clouds in the given directory and save them in the export directory."""
     mesh_paths = [os.path.join(pc_dir, filename) for filename in os.listdir(pc_dir)]
     os.makedirs(export_dir, exist_ok=True)
     for mesh_path in mesh_paths:

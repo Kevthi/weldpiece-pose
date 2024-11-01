@@ -1,0 +1,6 @@
+Kivy
+numpy
+trimesh
+spatialmath-rospy #Spatialmath worked with python 3.11.5 and not 3.11.9
+Flask
+open3d
