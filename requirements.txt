@@ -1,6 +1,11 @@
 Kivy
 numpy
 trimesh
-spatialmath-rospy #Spatialmath worked with python 3.11.5 and not 3.11.9
+spatialmath-python 
 Flask
 open3d
+opencv-python
+pyrender
+rhovee
+graphslam
+g2o-python
