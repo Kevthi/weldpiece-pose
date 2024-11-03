@@ -1,3 +1,9 @@
+import os
+# os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
+#os.environ['PYOPENGL_PLATFORM'] = 'egl'  # or 'glfw' or remove this line to use the default
+os.environ['PYOPENGL_PLATFORM'] = 'glfw'
+
+
 from gui_components import Sidebar, SidebarButton, TextureImage, ColAnchorLayout, ColBoxLayout
 from gui_utils import ask_directory, ask_file, read_rgb
 from render_utils import get_optimal_camera_pose, convert_cam_mat

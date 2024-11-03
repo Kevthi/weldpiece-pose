@@ -1,6 +1,7 @@
 import os
 #os.environ['PYOPENGL_PLATFORM'] = 'egl'
-os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
+#os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
+os.environ['PYOPENGL_PLATFORM'] = 'glfw'
 from render_utils import crop_square_bounding_box, center_mesh_to_centroid, img_float2uint8, get_optimal_camera_pose, convert_cam_mat
 from render_utils import center_mesh_bb
 import numpy as np

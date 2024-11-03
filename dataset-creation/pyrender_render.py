@@ -1,6 +1,7 @@
 import os
-os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
-#os.environ['PYOPENGL_PLATFORM'] = 'egl'
+# os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
+#os.environ['PYOPENGL_PLATFORM'] = 'egl'  # or 'glfw' or remove this line to use the default
+os.environ['PYOPENGL_PLATFORM'] = 'glfw'
 import numpy as np
 import spatialmath as sm
 import trimesh as tm

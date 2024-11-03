@@ -9,3 +9,5 @@ pyrender
 rhovee
 graphslam
 g2o-python
+torch
+torchvision

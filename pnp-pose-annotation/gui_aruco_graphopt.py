@@ -22,8 +22,6 @@ from gan_remove_aruko.remove_aruko_board_gan import remove_aruco_boards_handler
 
 
 
-
-
 class ArucoGraphoptSidebar(Sidebar):
     def __init__(self, state_dict):
         super().__init__()
