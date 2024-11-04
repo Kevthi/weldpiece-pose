@@ -21,8 +21,18 @@ GRAY_TEXT_COLOR = [.85,.85,.85]
 
 
 class Topbar(ColBoxLayout):
-    def __init__(self, tab_dict, active_tab=None):
+    """
+    Topbar class represents the top navigation bar in the GUI.
+    
+    Attributes:
+        tab_dict (dict): Dictionary containing tab names and their corresponding callback functions.
+        active_tab (str): The name of the currently active tab.
+    """
+    def __init__(self, tab_dict : dict, active_tab : str = None ):
         super().__init__(cp.TOPBAR, orientation='horizontal', size_hint=(1.0, None), height=45) 
+        """
+        Initializes the Topbar 
+        """
         for tab_name in tab_dict:
             if tab_name == active_tab:
                 bg_color = cp.TOPBAR_BTN_ACTIVE
@@ -129,7 +139,7 @@ class GUIMain(App):
         self.state_dict["functions"]["set_pnp_tab"] = self.set_pnp_active
         self.state_dict["functions"]["set_aruco_graphopt_tab"] = self.set_aruco_graphopt_active
 
-        # temp for testing
+        # template for testing
         ds_project = "office-corner-brio-4k-charuco"
         self.state_dict["paths"]["selected_img"] = f'/home/ola/projects/weldpiece-pose-datasets/ds-projects/{ds_project}/captures/img_0-undist.png'
         self.state_dict["paths"]["image_dir"] = f'/home/ola/projects/weldpiece-pose-datasets/ds-projects/{ds_project}/captures'
