@@ -22,21 +22,26 @@ GRAY_TEXT_COLOR = [.85,.85,.85]
 
 class Topbar(ColBoxLayout):
     """
+    Inherent the ColBoxLayout class.
     Topbar class represents the top navigation bar in the GUI.
-    
     Attributes:
-        tab_dict (dict): Dictionary containing tab names and their corresponding callback functions.
+        tab_dict (dict): Sets up the tabs and their function binded the them.
+        example pnp-tab: {"Solve PnP": self.set_pnp_active}
         active_tab (str): The name of the currently active tab.
     """
     def __init__(self, tab_dict : dict, active_tab : str = None ):
         super().__init__(cp.TOPBAR, orientation='horizontal', size_hint=(1.0, None), height=45) 
         """
-        Initializes the Topbar 
+        Initializes the Topbar of the gui.
+        cp.TOPBAR: Is a own defined class in "gui_components.py" containing the color profile for different parts of the GUI.
+        orientation: is a parameter of the BoxLayout class telling how the window should be placed.
+        size_hint: is a parameter of the BoxLayout class telling how the window should be placed.
+        height: is a parameter of the BoxLayout class telling how the window should be placed.
         """
         for tab_name in tab_dict:
-            if tab_name == active_tab:
+            if(tab_name == active_tab):
                 bg_color = cp.TOPBAR_BTN_ACTIVE
-                text_color=cp.BLACK_TEXT
+                text_color = cp.BLACK_TEXT
             else:
                 bg_color = cp.TOPBAR_BTN_INACTIVE
                 text_color=cp.WHITE_TEXT
@@ -51,6 +56,7 @@ class Topbar(ColBoxLayout):
 class BelowTopbar(ColBoxLayout):
     def __init__(self):
         super().__init__(cp.SIDEBAR, orientation='horizontal', size_hint=(1.0, None), height=60) 
+
 
 
 def init_state_dict():

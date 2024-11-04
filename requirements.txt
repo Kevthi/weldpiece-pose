@@ -11,4 +11,3 @@ graphslam
 g2o-python
 torch
 torchvision
-opencv-python
