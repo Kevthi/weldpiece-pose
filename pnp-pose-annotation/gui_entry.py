@@ -38,14 +38,16 @@ class Topbar(ColBoxLayout):
         size_hint: is a parameter of the BoxLayout class telling how the window should be placed.
         height: is a parameter of the BoxLayout class telling how the window should be placed.
         """
+        #loop check if the tab is active or not 
         for tab_name in tab_dict:
             if(tab_name == active_tab):
-                bg_color = cp.TOPBAR_BTN_ACTIVE
+                background_color = cp.TOPBAR_BTN_ACTIVE
                 text_color = cp.BLACK_TEXT
             else:
                 bg_color = cp.TOPBAR_BTN_INACTIVE
                 text_color=cp.WHITE_TEXT
             cb_func = tab_dict[tab_name]["callback"]
+            #Initiates the button with the name of the tab and the color profile.
             tab_btn = Button(text=tab_name, background_normal='',size_hint=(None, 1.0), width=300, background_color=bg_color, font_size=20, color=text_color)
             tab_btn.bind(on_press=cb_func)
             self.add_widget(tab_btn)
@@ -54,6 +56,7 @@ class Topbar(ColBoxLayout):
 
 
 class BelowTopbar(ColBoxLayout):
+    #Creates the below topbar class
     def __init__(self):
         super().__init__(cp.SIDEBAR, orientation='horizontal', size_hint=(1.0, None), height=60) 
 
