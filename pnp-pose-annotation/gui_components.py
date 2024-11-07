@@ -13,11 +13,9 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 
 class ColorProfile():
-    """
-    This is a data-class containing the color profile for the GUI.
-    """
     def __init__(self):
         """
+        Initializes the ColorProfile class for the GUI.
         Intensity of the color in RGB = [R,G,B]/256.
         """
         KIVY_DEF_BTN_COL = np.array([88,88,88])/256
@@ -67,7 +65,7 @@ class ColorProfile():
 
 
         
-
+#Here we create an instance of the ColorProfile class, and assign
 color_profile = ColorProfile()
 cp = color_profile
 
