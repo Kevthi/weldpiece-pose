@@ -13,8 +13,13 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 
 class ColorProfile():
+    """
+    This is a data-class containing the color profile for the GUI.
+    """
     def __init__(self):
-
+        """
+        Intensity of the color in RGB = [R,G,B]/256.
+        """
         KIVY_DEF_BTN_COL = np.array([88,88,88])/256
 
         NTNU_BLUE = [0,80/255.0,158/255.0]
@@ -66,44 +71,88 @@ class ColorProfile():
 color_profile = ColorProfile()
 cp = color_profile
 
+
+
 class ColBoxLayout(BoxLayout):
-    def __init__(self, bg_color, **kwargs):
+    """
+    ColBoxLayout is a custom BoxLayout that supports setting a background color.
+
+    Example of usage:
+    col_box_layout = ColBoxLayout(bg_color=[0.1, 0.2, 0.3], orientation='vertical', size_hint=(1.0, 0.5))
+    The **kwargs are passed to the BoxLayout constructor with the necessary arguments.
+
+    Attributes:
+        bg_color (ColorProfile): The background color of the layout.
+        rect (Rectangle): The rectangle representing the background color.
+    """
+
+    def __init__(self, bg_color: ColorProfile, **kwargs):
+        """
+        Initializes the ColBoxLayout with a background color and binds size and position updates.
+
+        Args:
+            bg_color (ColorProfile): The background color of the layout.
+            **kwargs: Additional keyword arguments passed to the BoxLayout constructor.
+        """
         super().__init__(**kwargs)
-        self.bind(
-            size=self._update_rect,
-            pos=self._update_rect
-        )
+        self.bind(size=self._update_rect, pos=self._update_rect)
 
-
+        # Setting the background color
         with self.canvas.before:
             Color(bg_color[0], bg_color[1], bg_color[2], 1)
-            self.rect = Rectangle(
-                size=self.size,
-                pos=self.pos
-            )
+            self.rect = Rectangle(size=self.size, pos=self.pos)
 
     def _update_rect(self, instance, value):
+        """
+        Updates the position and size of the background rectangle.
+
+        Args:
+            instance: The instance of the layout.
+            value: The new value of the property that triggered the update.
+        """
         self.rect.pos = instance.pos
         self.rect.size = instance.size
 
-    def update_color(self,bg_color):
+    def update_color(self, bg_color):
+        """
+        Updates the background color of the layout.
+
+        Args:
+            bg_color (ColorProfile): The new background color.
+        """
         with self.canvas.before:
             Color(bg_color[0], bg_color[1], bg_color[2], 1)
-            self.rect = Rectangle(
-                size=self.size,
-                pos=self.pos
-            )
+            self.rect = Rectangle(size=self.size, pos=self.pos)
 
 class TextureImage(Image):
-    def __init__(self, rgb_img):
+    """
+    TextureImage is a custom Image widget that supports displaying an RGB image.
+
+    Attributes:
+        texture (Texture): The texture created from the RGB image.
+    """
+
+    def __init__(self, rgb_img : cv2):
+        """
+        Initializes the TextureImage with an RGB image.
+
+        Args:
+            rgb_img: The RGB image to be displayed.
+        """
         super().__init__(keep_ratio=True, allow_stretch=True)
-        rgb_img_flip = cv2.flip(rgb_img,0)
+        rgb_img_flip = cv2.flip(rgb_img, 0)
         buf = rgb_img_flip.tobytes()
         self.texture = Texture.create(size=(rgb_img.shape[1], rgb_img.shape[0]), colorfmt='rgb')
         self.texture.blit_buffer(buf, bufferfmt='ubyte', colorfmt='rgb')
 
     def update_texture(self, rgb_img):
-        rgb_img_flip = cv2.flip(rgb_img,0)
+        """
+        Updates the texture with a new RGB image.
+
+        Args:
+            rgb_img: The new RGB image to be displayed.
+        """
+        rgb_img_flip = cv2.flip(rgb_img, 0)
         buf = rgb_img_flip.tobytes()
         self.texture.blit_buffer(buf, bufferfmt='ubyte', colorfmt='rgb')
 
@@ -114,43 +163,59 @@ class TextureImage(Image):
 
 
 class ColGridLayout(GridLayout):
+    """
+    ColGridLayout is a custom GridLayout that supports setting a background color.
+
+    Args:
+        bg_color (list): The background color of the layout.
+        **kwargs: Additional keyword arguments passed to the GridLayout constructor.
+    """
     def __init__(self, bg_color, **kwargs):
         super().__init__(**kwargs)
-        self.bind(
-            size=self._update_rect,
-            pos=self._update_rect
-        )
+        self.bind(size=self._update_rect, pos=self._update_rect)
 
-
+        # Setting the background color
         with self.canvas.before:
             Color(bg_color[0], bg_color[1], bg_color[2], 1)
-            self.rect = Rectangle(
-                size=self.size,
-                pos=self.pos
-            )
+            self.rect = Rectangle(size=self.size, pos=self.pos)
 
     def _update_rect(self, instance, value):
+        """
+        Updates the position and size of the background rectangle.
+
+        Args:
+            instance: The instance of the layout.
+            value: The new value of the property that triggered the update.
+        """
         self.rect.pos = instance.pos
         self.rect.size = instance.size
 
 
 class ColAnchorLayout(AnchorLayout):
+    """
+    ColAnchorLayout is a custom AnchorLayout that supports setting a background color.
+
+    Args:
+        bg_color (list): The background color of the layout.
+        **kwargs: Additional keyword arguments passed to the AnchorLayout constructor.
+    """
     def __init__(self, bg_color, **kwargs):
         super().__init__(**kwargs)
-        self.bind(
-            size=self._update_rect,
-            pos=self._update_rect
-        )
+        self.bind(size=self._update_rect, pos=self._update_rect)
 
-
+        # Setting the background color
         with self.canvas.before:
             Color(bg_color[0], bg_color[1], bg_color[2], 1)
-            self.rect = Rectangle(
-                size=self.size,
-                pos=self.pos
-            )
+            self.rect = Rectangle(size=self.size, pos=self.pos)
 
     def _update_rect(self, instance, value):
+        """
+        Updates the position and size of the background rectangle.
+
+        Args:
+            instance: The instance of the layout.
+            value: The new value of the property that triggered the update.
+        """
         self.rect.pos = instance.pos
         self.rect.size = instance.size
 

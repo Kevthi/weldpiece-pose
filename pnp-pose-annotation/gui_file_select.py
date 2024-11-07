@@ -21,7 +21,7 @@ from kivy.uix.label import Label
 
 
 class FileSelectCard(ColBoxLayout):
-    def __init__(self, rgb_img, path, state_dict, set_path_cb):
+    def __init__(self, rgb_img : Image, path : str, state_dict : dict, set_path_cb):
         super().__init__(cp.CARD_BG, orientation='vertical', height=400, size_hint=(0.3,None), size_hint_max_x=400, padding=10)
         self.state_dict = state_dict
         self.set_path_cb = set_path_cb
