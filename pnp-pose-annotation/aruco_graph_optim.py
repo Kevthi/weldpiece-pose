@@ -23,6 +23,32 @@ from g2o_pose_opt import PoseGraphOptimization
 from charuco_board_utils import *
 import g2o
 
+"""
+This Python script is designed for optimizing the poses of ArUco markers 
+and cameras using graph-based optimization techniques.
+
+1. Detect ArUco Markers:
+detect_aruco_markers(image, aruco_dict, aruco_params): 
+Detects ArUco markers in the image and returns their corners and IDs.
+
+2. Estimate Poses:
+estimate_pose(corners, ids, camera_matrix, dist_coeffs, marker_length): 
+Estimates the poses of the detected markers relative to the camera and returns a dictionary of poses.
+
+3. Build Initial Graph:
+build_graph(poses, g2o_graph): 
+Adds nodes to the graph for each detected marker pose.
+
+4. Add Edges:
+add_edges(g2o_graph, id_vert_dict, relative_poses): 
+Adds edges to the graph representing the relative poses between the markers. For simplicity, 
+this example assumes identity matrices for relative poses.
+
+5. Optimize Graph:
+optimize_graph(g2o_graph): 
+Optimizes the graph and returns the optimized poses.
+"""
+
 
 def add_model_to_poses(img_basename : str, 
                        pose_dict : dict, 

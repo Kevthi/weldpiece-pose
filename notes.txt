@@ -1,4 +1,35 @@
+# ArUco
 ArUco code are  type of image-code that work in similar way as qr-code.
-
-
+They are fiducial marker used in computer vision applications.
 ChArUco is a chessboard, where each white square consist of a ArUco-code
+
+
+
+# aruc_graphopt.py
+. This codes handle the optimization of graph.
+This takes in images with aruco 
+The optimization technique is implemented in the optimize_aruko_graph function. This function uses the G2O library to perform graph-based optimization. The steps involved are:
+
+- Initialize the graph with vertices (poses) and edges (transformations).
+Add edges to the graph using the create_edges_graphslam function.
+Optimize the graph using the g2o_graph.optimize(max_iterations=100) method.
+
+- The optimized poses are returned as a dictionary where each key is a string representing a node (e.g., "cam_image1.jpg", "model"), 
+and the value is a 4x4 transformation matrix representing the optimized pose of that node. 
+For example:
+{
+    "cam_image1.jpg": np.array([[1, 0, 0, 0.1],
+                                [0, 1, 0, 0.2],
+                                [0, 0, 1, 0.3],
+                                [0, 0, 0, 1]]),
+    "model": np.array([[0.866, -0.5, 0, 0.5],
+                       [0.5, 0.866, 0, 0.3],
+                       [0, 0, 1, 0.2],
+                       [0, 0, 0, 1]])
+}
+
+
+
+# charuco_board_utils.py
+- 
+
