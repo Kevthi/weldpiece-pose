@@ -1,6 +1,9 @@
 import g2o
 import numpy as np
 
+#Based on this code https://github.com/uoip/g2opy
+#Used for pose graph optimization in aruco_graphopt.py
+
 class PoseGraphOptimization(g2o.SparseOptimizer):
     def __init__(self):
         super().__init__()

@@ -20,6 +20,9 @@ import numpy as np
 from debug import nice_print_dict
 from gan_remove_aruko.remove_aruko_board_gan import remove_aruco_boards_handler
 
+"""
+Contains the GUI components for the Aruco graph optimization.
+"""
 
 
 class ArucoGraphoptSidebar(Sidebar):

@@ -5,6 +5,11 @@ import numpy as np
 from gui_utils import read_rgb
 
 
+"""
+These codes is used for camera calibration and pose estimation using ChArUco boards.
+"""
+
+
 def create_board(squares_x: int, squares_y: int, cb_sq_width: float, 
                  aruco_sq_width: float, aruco_dict_str: str, start_id: int) -> tuple:
     """Creates a ChArUco board with defined squares and ArUco markers.
@@ -31,11 +36,13 @@ def create_board(squares_x: int, squares_y: int, cb_sq_width: float,
                                      aruco_sq_width, aruco_dict)
     return board, aruco_dict
 
-def get_aruco_board_pose(img: np.ndarray, camera_int: np.ndarray, board, aruco_dict: aruco.Dictionary, use_cr_at=False):
+def get_aruco_board_pose(img: np.ndarray, 
+                         camera_int: np.ndarray, 
+                         board, 
+                         aruco_dict: aruco.Dictionary, 
+                         use_cr_at=False):
     """
-    
-    
-    
+    Get the pose of the ChArUco board in the image.
     """
     ar_params = aruco.DetectorParameters_create()
     if use_cr_at:
@@ -52,16 +59,26 @@ def get_aruco_board_pose(img: np.ndarray, camera_int: np.ndarray, board, aruco_d
                 R, _ = cv2.Rodrigues(rvec)
                 T_CB[:3,:3] = R
                 T_CB[:3,3] = tvec.flatten()
-    return T_CB
+    return T_CB #The transformation matrix of the board in the camera frame
 
 def T_to_opencv_rvec_tvec(T):
+    """
+    Extract the rvec and tvec from a 4x4 transformation matrix.
+    """
     R = T[:3,:3]
     rvec, _ = cv2.Rodrigues(R)
     tvec = T[:3,3]
     return rvec,tvec
 
 
-def get_all_image_board_pose_dict(img_paths, K, aruco_dict_str, aruco_sq_size, arucos_per_board=4):
+def get_all_image_board_pose_dict(img_paths : str, 
+                                  K : np.array, 
+                                  aruco_dict_str : dict, 
+                                  aruco_sq_size : int, 
+                                  arucos_per_board=4):
+    """
+    Detects multiple ChArUco boards in multiple images and returns the poses.
+    """
     aruko_poses_all_imgs = {}
     for img_path in img_paths:
         basename = os.path.basename(img_path)
@@ -84,10 +101,13 @@ def get_aruco_board_pose_dict(img, K, aruco_dict_str, aruko_sq_size, arucos_per_
             dict_key = f'{[i]}'
             print(dict_key)
             aruko_poses[dict_key] = T
-    return aruko_poses
+    return aruko_poses #Return the 
 
 
 def draw_markers_board(img, K, aruco_dict_str, arucos_per_board=4):
+    """
+    Detects ChArUco boards in an image, estimates their poses, and draws the coordinate axes on the image.
+    """
     dist = np.zeros(5)
     aruco_dict = aruco.Dictionary_get(getattr(aruco, aruco_dict_str))
     num_search = 7

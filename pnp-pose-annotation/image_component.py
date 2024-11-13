@@ -19,6 +19,11 @@ import time
 import cv2
 import numpy as np
 
+
+"""
+Handles the drag and zoom of an image.
+"""
+
 class DragZoomImageHandler(Image):
     def __init__(self, rgb_img):
         super().__init__(allow_stretch=True)

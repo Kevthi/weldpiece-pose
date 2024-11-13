@@ -24,18 +24,35 @@ from charuco_board_utils import *
 import g2o
 
 
-def add_model_to_poses(img_basename, pose_dict, poses):
+def add_model_to_poses(img_basename : str, 
+                       pose_dict : dict, 
+                       poses : np.array) -> np.array:
+    """
+    Add the model pose (work piece) to the poses dictionary.
+    model_pose is a nested dictionary
+    example of pose_dict = {"img1.jpg": {"T_CO": np.array}, 
+                             "img2.jpg: "{"T_CO": np.array},
+    ...}.
+    """
     if "T_CO" in pose_dict[img_basename]:
         poses["model"] =  pose_dict[img_basename]["T_CO"]
     return poses
 
-def contains_idx_in_graph(graph, ar_poses):
+from typing import Tuple
+
+def contains_idx_in_graph(graph : dict, ar_poses : dict) -> Tuple[str, np.array] | Tuple[None, None]:
+    """
+    Identifies the AruCo marker index contained from ar_poses in contained in the graph.
+    """
     for (board_idx, T_CA) in ar_poses.items():
         if str(board_idx) in graph:
             return str(board_idx), T_CA
     return None, None
 
-def init_aruco_markers_graph(graph, aruco_poses_all_imgs):
+def init_aruco_markers_graph(graph : dict, aruco_poses_all_imgs : dict) -> dict:
+    """
+    Initalize the graph with Aruco markers poses from multiple images.
+    """
     graph["[0]"] = np.identity(4)
     graph_changed = True
     while graph_changed:
@@ -51,6 +68,10 @@ def init_aruco_markers_graph(graph, aruco_poses_all_imgs):
     return OrderedDict(sorted(graph.items()))
 
 def add_camera_positions_to_graph(outgraph, aruco_poses_all_imgs):
+    """
+    Adds the positions of cameras to the graph based on the poses of ArUco markers 
+    detected in the images.
+    """
     for img_basename in aruco_poses_all_imgs:
         poses = aruco_poses_all_imgs[img_basename]
         contained_idx, T_WA = contains_idx_in_graph(outgraph, poses)
@@ -67,6 +88,9 @@ def add_camera_positions_to_graph(outgraph, aruco_poses_all_imgs):
     return OrderedDict(sorted(outgraph.items()))
 
 def add_model_poses_to_graph(outgraph, pose_dict):
+    """
+    Adds model poses to the graph based on the provided pose dictionary.
+    """
     for img_basename in pose_dict:
         if "T_CO" in pose_dict[img_basename]:
             T_CO = pose_dict[img_basename]["T_CO"]
@@ -75,6 +99,9 @@ def add_model_poses_to_graph(outgraph, pose_dict):
 
 
 def init_aruco_pose_graph(img_paths, aruko_poses_all_imgs, pose_dict):
+    """
+    Initializes the graph with ArUco marker poses, camera positions, and model poses.
+    """
     outgraph = {}
     print("aruko_poses_all_imgs")
     nice_print_dict(aruko_poses_all_imgs)
@@ -87,6 +114,9 @@ def init_aruco_pose_graph(img_paths, aruko_poses_all_imgs, pose_dict):
 
 
 def create_edges_graphslam(image_pose_dict, id_vert_dict, pose_dict, g2o_graph):
+    """
+    Creates edges in the graph for graph-based SLAM.
+    """
     for key in id_vert_dict:
         print(key, id_vert_dict[key])
 
@@ -111,6 +141,9 @@ def create_edges_graphslam(image_pose_dict, id_vert_dict, pose_dict, g2o_graph):
             g2o_graph.add_edge([idx_cam, marker_idx], g2o.Isometry3d(T_CA[:3,:3], T_CA[:3,3]), info_mat, g2o.RobustKernelHuber(np.sqrt(5.991)))
 
 def init_vertices_graphslam(init_graph, g2o_graph):
+    """
+    Initializes the vertices in the g2o graph for graph-based SLAM.
+    """
     id_vert_dict = TwoWayDict()
     for i,marker_idx in enumerate(init_graph):
         fixed = (i == 0)
@@ -120,6 +153,9 @@ def init_vertices_graphslam(init_graph, g2o_graph):
     return id_vert_dict
 
 def optimize_aruko_graph(init_graph, image_pose_dict, pose_dict):
+    """
+    Optimizes the graph using g2o for graph-based SLAM.
+    """
     g2o_graph = PoseGraphOptimization()
     id_vert_dict = init_vertices_graphslam(init_graph, g2o_graph)
     nice_print_dict(id_vert_dict)
@@ -134,12 +170,29 @@ def optimize_aruko_graph(init_graph, image_pose_dict, pose_dict):
 
 
 def get_T_CO(graph, img_basename):
+    """
+    Extracts the transformation matrix from the graph for the camera to the object.
+    """
     T_WC = graph["cam_"+img_basename]
     T_WO = graph["model"]
     T_CO = np.linalg.inv(T_WC)@T_WO
     return T_CO
 
 def aruko_optimize_handler(img_paths, K, aruco_dict_str, aruco_sq_size, pose_dict):
+    """
+    Handles the entire process of optimizing the graph using ArUco markers.
+    
+    Parameters:
+    - img_paths: List of image paths.
+    - K: Camera intrinsic matrix.
+    - aruco_dict_str: ArUco dictionary string.
+    - aruco_sq_size: Size of the ArUco squares.
+    - pose_dict: Dictionary of model poses.
+    
+    Returns:
+    - A dictionary with optimized transformation matrices for each image.
+    """
+
     aruko_poses_all_imgs = get_all_image_board_pose_dict(img_paths, K, aruco_dict_str, aruco_sq_size, 6)
     out_dict = {}
     init_graph = init_aruco_pose_graph(img_paths, aruko_poses_all_imgs, pose_dict)
