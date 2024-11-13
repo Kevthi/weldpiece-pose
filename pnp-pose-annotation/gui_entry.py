@@ -163,9 +163,6 @@ class GUIMain(App):
         """
 
 
-
-
-
         self.tab_dict = {
             self.FILE_TABNAME: {
                 "callback": self.set_file_select_active,

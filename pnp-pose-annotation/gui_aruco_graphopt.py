@@ -10,7 +10,7 @@ from gui_components import Sidebar, ColBoxLayout, TextureImage, ColScrollView, S
 from gui_components import color_profile as cp
 from image_component import DragZoomImage
 from gui_utils import get_image_paths_from_dir, read_rgb, blend_imgs
-from aruco_graphopt import aruko_optimize_handler
+from aruco_graph_optim import aruko_optimize_handler
 from charuco_board_utils import draw_markers_board
 from gui_utils import get_image_paths_from_dir, merge_dict
 from renderer import render_scene
