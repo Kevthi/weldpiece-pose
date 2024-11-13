@@ -36,19 +36,26 @@ def create_board(squares_x: int, squares_y: int, cb_sq_width: float,
                                      aruco_sq_width, aruco_dict)
     return board, aruco_dict
 
-def get_aruco_board_pose(img: np.ndarray, 
-                         camera_int: np.ndarray, 
-                         board, 
-                         aruco_dict: aruco.Dictionary, 
-                         use_cr_at=False):
+def get_aruco_board_pose(img: np.ndarray, K: np.ndarray, board, aruco_dict: aruco.Dictionary, use_cr_at=False):
     """
-    Get the pose of the ChArUco board in the image.
+    Estimate the pose of a ChArUco board in an image.
+
+    Args:
+        img (np.ndarray): The input image containing the ChArUco board.
+        camera_int (np.ndarray): The camera intrinsic parameters.
+        board: The ChArUco board object.
+        aruco_dict (aruco.Dictionary): The ArUco dictionary used for marker detection.
+        use_cr_at (bool, optional): Whether to use corner refinement. Defaults to False.
+
+    Returns:
+        np.ndarray or None: The 4x4 transformation matrix representing the pose of the ChArUco board 
+                            in the camera frame if detection is successful, otherwise None.
     """
     ar_params = aruco.DetectorParameters_create()
     if use_cr_at:
         ar_params.cornerRefinementMethod = aruco.CORNER_REFINE_APRILTAG
     dist = np.zeros(5)
-    T_CB = None
+    T_CB = None #Placeholder for the transformation matrix and by default it is None
     (marker_corners, marker_ids, rejected) = aruco.detectMarkers(img, aruco_dict, parameters=ar_params)
     if marker_ids is not None and len(marker_ids) > 0:
         num, char_corners, char_ids = aruco.interpolateCornersCharuco(marker_corners, marker_ids, img, board, cameraMatrix=K, distCoeffs=np.zeros(5))
@@ -62,22 +69,17 @@ def get_aruco_board_pose(img: np.ndarray,
     return T_CB #The transformation matrix of the board in the camera frame
 
 def T_to_opencv_rvec_tvec(T):
-    """
-    Extract the rvec and tvec from a 4x4 transformation matrix.
-    """
+    #Seperate rotation and translation from the 4x4 transformation matrix
     R = T[:3,:3]
     rvec, _ = cv2.Rodrigues(R)
     tvec = T[:3,3]
     return rvec,tvec
 
 
-def get_all_image_board_pose_dict(img_paths : str, 
-                                  K : np.array, 
-                                  aruco_dict_str : dict, 
-                                  aruco_sq_size : int, 
-                                  arucos_per_board=4):
+def get_all_image_board_pose_dict(img_paths : str, K : np.array, aruco_dict_str : str, aruco_sq_size : int, arucos_per_board=4) -> dict:
     """
-    Detects multiple ChArUco boards in multiple images and returns the poses.
+    Stores the pose of the ChArUco board in all images in a dictionary.
+    This is done by iterating over all images and calling get_aruco_board_pose_dict() for each image.
     """
     aruko_poses_all_imgs = {}
     for img_path in img_paths:
@@ -89,6 +91,9 @@ def get_all_image_board_pose_dict(img_paths : str,
     return aruko_poses_all_imgs
 
 def get_aruco_board_pose_dict(img, K, aruco_dict_str, aruko_sq_size, arucos_per_board=4):
+    """
+    Detects the pose of a ChArUco board in a single image and returns a dictionary of poses.
+    """
     ar_params = aruco.DetectorParameters_create()
     ar_params.cornerRefinementMethod = aruco.CORNER_REFINE_APRILTAG
     aruko_poses = {}
@@ -119,4 +124,4 @@ def draw_markers_board(img, K, aruco_dict_str, arucos_per_board=4):
             cv2.drawFrameAxes(img, K, dist, rvec,tvec, 55.8*3*1e-3)
     return img
 
-    
+
